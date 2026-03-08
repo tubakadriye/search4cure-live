@@ -161,27 +161,28 @@ def create_graph(database, graph_name):
     operation.result()
     print(f"Graph {graph_name} created ✅")
 
-def create_standard_instance(client, project_id, instance_id, region):
-    """Create a Spanner instance with STANDARD edition using the admin API."""
+def create_instance_with_enterprise(client, project_id, instance_id, region):
+    """Create a Spanner instance with ENTERPRISE edition using the admin API."""
     config_name = f"projects/{project_id}/instanceConfigs/regional-{region}"
     instance_name = f"projects/{project_id}/instances/{instance_id}"
-
+    
     instance_admin_client = client.instance_admin_api
-
+    
     instance_pb = InstancePB(
         name=instance_name,
         config=config_name,
-        display_name="Diabetes Research Network",
+        display_name="Survivor Network",
         processing_units=100,
-        edition=InstancePB.Edition.STANDARD,
+        edition=InstancePB.Edition.ENTERPRISE,
     )
+    
     request = CreateInstanceRequest(
-        parent=f"projects/{project_id}", 
-        instance_id=instance_id, 
-        instance=instance_pb
+        parent=f"projects/{project_id}",
+        instance_id=instance_id,
+        instance=instance_pb,
     )
+    
     operation = instance_admin_client.create_instance(request=request)
-    print("Waiting for instance creation...")
     return operation
 
 def print_config(project_id, instance_id, database_id, graph_name, region):
@@ -222,7 +223,7 @@ def main():
         return
     
     print("\n" + "=" * 60)
-    print("Survivor Network Database Setup")
+    print("Diabetes Research Database Setup")
     print("=" * 60)
     print(f"  Project:   {project_id}")
     print(f"  Instance:  {instance_id}")
@@ -236,18 +237,17 @@ def main():
     instance_exists = instance.exists()
 
     if instance_exists:
-        print(f"Using existing instance: {instance_id}")
+        print(f"Instance {instance_id} already exists. Using existing instance.")
     elif not args.skip_instance:
-        print(f"Creating instance {instance_id}...")
-        operation = create_standard_instance(client, project_id, instance_id, region)
+        print(f"Creating instance {instance_id} with ENTERPRISE edition...")
+        operation = create_instance_with_enterprise(client, project_id, instance_id, region)
         print("Waiting for instance creation (this may take a few minutes)...")
         operation.result()
         print("Instance created!")
         # Refresh instance reference
         instance = client.instance(instance_id)
-        
     else:
-        print(f"ERROR: Instance {instance_id} does not exist and --skip-instance was specified.")
+        print("ERROR: Instance does not exist and --skip-instance was specified.")
         return
 
     database = instance.database(database_id)
