@@ -139,21 +139,47 @@ def create_graph(database, graph_name):
     ddl = f"""
     CREATE PROPERTY GRAPH {graph_name}
       NODE TABLES (
-        Papers KEY (paper_id) LABEL Paper PROPERTIES (paper_id, title, abstract, publication_date, journal),
-        Authors KEY (author_id) LABEL Author PROPERTIES (author_id, name, affiliation),
-        Methods KEY (method_id) LABEL Method PROPERTIES (method_id, name, category),
-        Datasets KEY (dataset_id) LABEL Dataset PROPERTIES (dataset_id, name, description),
-        Diseases KEY (disease_id) LABEL Disease PROPERTIES (disease_id, name, type),
-        Biomarkers KEY (biomarker_id) LABEL Biomarker PROPERTIES (biomarker_id, name, unit),
-        Drugs KEY (drug_id) LABEL Drug PROPERTIES (drug_id, name, mechanism)
+        Papers KEY (paper_id) LABEL Paper PROPERTIES (ALL_COLUMNS),
+        Authors KEY (author_id) LABEL Author PROPERTIES (ALL_COLUMNS),
+        Methods KEY (method_id) LABEL Method PROPERTIES (ALL_COLUMNS),
+        Datasets KEY (dataset_id) LABEL Dataset PROPERTIES (ALL_COLUMNS),
+        Diseases KEY (disease_id) LABEL Disease PROPERTIES (ALL_COLUMNS),
+        Biomarkers KEY (biomarker_id) LABEL Biomarker PROPERTIES (ALL_COLUMNS),
+        Drugs KEY (drug_id) LABEL Drug PROPERTIES (ALL_COLUMNS)
       )
       EDGE TABLES (
-        PaperUsesMethod KEY (paper_id, method_id) SOURCE KEY (paper_id) DESTINATION KEY (method_id) LABEL USES_METHOD,
-        PaperStudiesDisease KEY (paper_id, disease_id) SOURCE KEY (paper_id) DESTINATION KEY (disease_id) LABEL STUDIES_DISEASE,
-        PaperUsesDataset KEY (paper_id, dataset_id) SOURCE KEY (paper_id) DESTINATION KEY (dataset_id) LABEL USES_DATASET,
-        PaperMentionsBiomarker KEY (paper_id, biomarker_id) SOURCE KEY (paper_id) DESTINATION KEY (biomarker_id) LABEL MENTIONS_BIOMARKER,
-        DrugTreatsDisease KEY (drug_id, disease_id) SOURCE KEY (drug_id) DESTINATION KEY (disease_id) LABEL TREATS,
-        AuthorWrotePaper KEY (author_id, paper_id) SOURCE KEY (author_id) DESTINATION KEY (paper_id) LABEL WROTE
+        PaperUsesMethod KEY (paper_id, method_id)
+            SOURCE KEY (paper_id) REFERENCES Papers
+            DESTINATION KEY (method_id) REFERENCES Methods
+            LABEL USES_METHOD,
+        PaperStudiesDisease KEY (paper_id, disease_id)
+            SOURCE KEY (paper_id) REFERENCES Papers
+            DESTINATION KEY (disease_id) REFERENCES Diseases
+            LABEL STUDIES_DISEASE,
+        PaperCitesPaper KEY (citing_paper_id, cited_paper_id)
+            SOURCE KEY (citing_paper_id) REFERENCES Papers
+            DESTINATION KEY (cited_paper_id) REFERENCES Papers
+            LABEL CITES_PAPER,
+        PaperHasAuthor KEY (paper_id, author_id)
+            SOURCE KEY (paper_id) REFERENCES Papers
+            DESTINATION KEY (author_id) REFERENCES Authors
+            LABEL HAS_AUTHOR,
+        PaperUsesDataset KEY (paper_id, dataset_id) 
+            SOURCE KEY (paper_id) REFERENCES Papers
+            DESTINATION KEY (dataset_id) Datasets
+            LABEL USES_DATASET,
+        PaperMentionsBiomarker KEY (paper_id, biomarker_id) 
+            SOURCE KEY (paper_id) REFERENCES Papers
+            DESTINATION KEY (biomarker_id) REFERENCES Biomarkers
+            LABEL MENTIONS_BIOMARK,
+        DrugTreatsDisease KEY (drug_id, disease_id) 
+            SOURCE KEY (drug_id) REFERENCES Drugs
+            DESTINATION KEY (disease_id) REFERENCES Diseases
+            LABEL TREATS,
+        AuthorWrotePaper KEY (author_id, paper_id) 
+            SOURCE KEY (author_id) REFERENCES Authors
+            DESTINATION KEY (paper_id) REFERENCES Papers
+            LABEL WROTE
       )
     """
     print(f"Creating {graph_name}...")

@@ -157,7 +157,28 @@ This command will:
 
 - Insert sample research data
 
-### 8. Final Architecture After Setup
+### 8. Backend Virtual Environment Setup
+
+**Option 1 — Activate .venv manually:**
+
+```
+bash
+cd ~/search4cure-live/backend
+source .venv/bin/activate   # Linux / Cloud Shell
+cd ../scripts
+python setup_data.py
+```
+
+**Option 2 — Use uv run (auto-uses .venv):**
+
+```
+cd ~/search4cure-live/backend
+uv run python ../scripts/setup_data.py
+```
+
+**Tip:** Always run from inside .venv or using uv run to ensure dependencies (like python-dotenv) are correctly loaded.
+
+### 9. Final Architecture After Setup
 
 After initialization, the Search4Cure system architecture will look like this:
 
@@ -214,3 +235,5 @@ This script automatically:
 - Links your billing account
 
 - Installs Python dependencies
+
+
