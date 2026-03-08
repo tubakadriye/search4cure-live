@@ -292,13 +292,17 @@ def main():
     print(f"Creating database {database_id}...")
     database = instance.database(database_id, ddl_statements=DDL_STATEMENTS)
     operation = database.create()
+    print("Waiting for database to be ready...")
     operation.result()
     print("Database created!")
 
     # Insert data
+    print("Inserting node data...")
     database = instance.database(database_id)
     insert_initial_data(database)
+    print("Node data inserted ✅")
 
+    print(f"Creating property graph {graph_name}...")
     create_graph(database, graph_name)
 
     print("\n" + "=" * 60)
