@@ -101,8 +101,8 @@ def insert_initial_data(database):
     def insert_nodes(txn):
         txn.insert(
             "Papers",
-            ["paper_id", "title", "abstract", "publication_date", "journal"],
-            [("paper_001", "Predicting Diabetes Progression with Deep Learning",
+            columns = ["paper_id", "title", "abstract", "publication_date", "journal"],
+            values = [("paper_001", "Predicting Diabetes Progression with Deep Learning",
               "We applied LSTM to predict HbA1c levels in type 2 diabetes.",
               "2023-05-15", "Diabetes Journal")]
         )
@@ -149,7 +149,9 @@ def create_graph(database, graph_name):
         AuthorWrotePaper KEY (author_id, paper_id) SOURCE KEY (author_id) DESTINATION KEY (paper_id) LABEL WROTE
       )
     """
-    database.update_ddl([ddl]).result()
+    print(f"Creating {graph_name}...")
+    operation = database.update_ddl([ddl])
+    operation.result()
     print(f"Graph {graph_name} created ✅")
 
 def print_config(project_id, instance_id, database_id, graph_name, region):
@@ -204,7 +206,7 @@ def main():
             config=config_name,
             display_name="Diabetes Research Network",
             processing_units=100,
-            edition=InstancePB.Edition.ENTERPRISE,
+            edition=InstancePB.Edition.STANDARD,
         )
         request = CreateInstanceRequest(parent=f"projects/{project_id}", instance_id=instance_id, instance=instance_pb)
         operation = client.instance_admin_api.create_instance(request=request)
@@ -221,6 +223,7 @@ def main():
         if args.force:
             print(f"Deleting existing database {database_id} (--force)...")
             database.drop()
+            print("Database deleted. Waiting 5 seconds...")
             time.sleep(5)
         else:
             print(f"Database {database_id} already exists. Use --force to recreate.")
@@ -228,7 +231,8 @@ def main():
 
     print(f"Creating database {database_id}...")
     database = instance.database(database_id, ddl_statements=DDL_STATEMENTS)
-    database.create().result()
+    operation = database.create()
+    operation.result()
     print("Database created!")
 
     insert_initial_data(database)
