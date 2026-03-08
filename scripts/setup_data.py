@@ -288,7 +288,6 @@ def main():
         if args.force:
             print(f"Deleting existing database {database_id} (--force)...")
             operation = database.drop()
-            operation.result()  # wait for deletion
             print("Database deleted. Waiting 5 seconds...")
             time.sleep(5)
         else:
