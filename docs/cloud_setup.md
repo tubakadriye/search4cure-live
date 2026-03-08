@@ -11,14 +11,6 @@
 gcloud config set project search4cure-diabetes --quiet 
 ```
 
-### 2. Add environment tag
-```bash
-gcloud resource-manager tags bindings create \
-    --parent=projects/search4cure-diabetes \
-    --tag-key=environment \
-    --tag-value=Development
-
-```
 
 ### 3. Enable required services
 ```bash

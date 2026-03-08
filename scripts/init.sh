@@ -20,11 +20,6 @@ else
     echo "$FINAL_PROJECT_ID" > "$PROJECT_FILE"
 fi
 
-# 2. Set environment tag
-gcloud resource-manager tags bindings create \
-    --parent=projects/$FINAL_PROJECT_ID \
-    --tag-key=environment \
-    --tag-value=Development || echo "Environment tag may already exist"
 
 # 3. Link billing account
 gcloud beta billing projects link $FINAL_PROJECT_ID --billing-account=YOUR_BILLING_ACCOUNT_ID || handle_error "Billing not linked"
