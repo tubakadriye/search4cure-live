@@ -5,7 +5,14 @@ Or:  python setup_database.py --project=your-project-id
 """
 
 from google.cloud import spanner
-import argparse, os, time
+from google.cloud.spanner_admin_instance_v1 import (
+    Instance as InstancePB,
+    CreateInstanceRequest,
+)
+from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
+import argparse
+import time
+import os
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -154,6 +161,29 @@ def create_graph(database, graph_name):
     operation.result()
     print(f"Graph {graph_name} created ✅")
 
+def create_standard_instance(client, project_id, instance_id, region):
+    """Create a Spanner instance with STANDARD edition using the admin API."""
+    config_name = f"projects/{project_id}/instanceConfigs/regional-{region}"
+    instance_name = f"projects/{project_id}/instances/{instance_id}"
+
+    instance_admin_client = client.instance_admin_api
+
+    instance_pb = InstancePB(
+        name=instance_name,
+        config=config_name,
+        display_name="Diabetes Research Network",
+        processing_units=100,
+        edition=InstancePB.Edition.STANDARD,
+    )
+    request = CreateInstanceRequest(
+        parent=f"projects/{project_id}", 
+        instance_id=instance_id, 
+        instance=instance_pb
+    )
+    operation = instance_admin_client.create_instance(request=request)
+    print("Waiting for instance creation...")
+    return operation
+
 def print_config(project_id, instance_id, database_id, graph_name, region):
     print("\n" + "="*60)
     print("Current Configuration (from environment or args):")
@@ -190,6 +220,16 @@ def main():
     if not project_id:
         print("ERROR: PROJECT_ID is required.")
         return
+    
+    print("\n" + "=" * 60)
+    print("Survivor Network Database Setup")
+    print("=" * 60)
+    print(f"  Project:   {project_id}")
+    print(f"  Instance:  {instance_id}")
+    print(f"  Database:  {database_id}")
+    print(f"  Graph:     {graph_name}")
+    print(f"  Region:    {region}")
+    print("=" * 60 + "\n")
 
     client = spanner.Client(project=project_id)
     instance = client.instance(instance_id)
@@ -199,27 +239,20 @@ def main():
         print(f"Using existing instance: {instance_id}")
     elif not args.skip_instance:
         print(f"Creating instance {instance_id}...")
-        from google.cloud.spanner_admin_instance_v1 import Instance as InstancePB, CreateInstanceRequest
-        config_name = f"projects/{project_id}/instanceConfigs/regional-{region}"
-        instance_pb = InstancePB(
-            name=f"projects/{project_id}/instances/{instance_id}",
-            config=config_name,
-            display_name="Diabetes Research Network",
-            processing_units=100,
-            edition=InstancePB.Edition.STANDARD,
-        )
-        request = CreateInstanceRequest(parent=f"projects/{project_id}", instance_id=instance_id, instance=instance_pb)
-        operation = client.instance_admin_api.create_instance(request=request)
-        print("Waiting for instance creation...")
+        operation = create_standard_instance(client, project_id, instance_id, region)
+        print("Waiting for instance creation (this may take a few minutes)...")
         operation.result()
         print("Instance created!")
+        # Refresh instance reference
         instance = client.instance(instance_id)
+        
     else:
         print(f"ERROR: Instance {instance_id} does not exist and --skip-instance was specified.")
         return
 
     database = instance.database(database_id)
-    if database.exists():
+    database_exists = database.exists()
+    if database_exists:
         if args.force:
             print(f"Deleting existing database {database_id} (--force)...")
             database.drop()
@@ -235,11 +268,21 @@ def main():
     operation.result()
     print("Database created!")
 
+    # Insert data
+    database = instance.database(database_id)
     insert_initial_data(database)
+
     create_graph(database, graph_name)
 
-    print("\n✅ Database setup complete!")
-    print(f"Instance: {instance_id}, Database: {database_id}, Graph: {graph_name}")
+    print("\n" + "=" * 60)
+    print("SUCCESS! Database setup complete.")
+    print("=" * 60)
+    print(f"\nInstance:  {instance_id}")
+    print(f"Database:  {database_id}")
+    print(f"Graph:     {graph_name}")
+    print(f"\nAccess your database at:")
+    print(f"https://console.cloud.google.com/spanner/instances/{instance_id}/databases/{database_id}?project={project_id}")
+
 
 if __name__ == "__main__":
     main()
