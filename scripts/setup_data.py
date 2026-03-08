@@ -1,3 +1,9 @@
+"""
+Diabetes Research Network Database Setup Script
+Run: python setup_database.py
+Or:  python setup_database.py --project=your-project-id
+"""
+
 from google.cloud import spanner
 import argparse, os, time
 from dotenv import load_dotenv
@@ -91,37 +97,22 @@ DDL_STATEMENTS = [
 ]
 
 def insert_initial_data(database):
-    """Insert sample data for nodes and edges."""
+    """Insert sample node and edge data."""
     def insert_nodes(txn):
-        # Papers
         txn.insert(
             "Papers",
-            columns=["paper_id", "title", "abstract", "publication_date", "journal"],
-            values=[
-                ("paper_001", "Predicting Diabetes Progression with Deep Learning", 
-                 "We applied LSTM to predict HbA1c levels in type 2 diabetes.", 
-                 "2023-05-15", "Diabetes Journal")
-            ]
+            ["paper_id", "title", "abstract", "publication_date", "journal"],
+            [("paper_001", "Predicting Diabetes Progression with Deep Learning",
+              "We applied LSTM to predict HbA1c levels in type 2 diabetes.",
+              "2023-05-15", "Diabetes Journal")]
         )
-        # Authors
-        txn.insert("Authors", ["author_id","name","affiliation"], 
-                   [("author_001","Alice Chen","University X")])
-        # Methods
-        txn.insert("Methods", ["method_id","name","category"],
-                   [("method_lstm","LSTM","Deep Learning")])
-        # Datasets
-        txn.insert("Datasets", ["dataset_id","name","description"],
-                   [("dataset_ukb","UK Biobank","Large scale biomedical dataset")])
-        # Diseases
-        txn.insert("Diseases", ["disease_id","name","type"],
-                   [("disease_t2d","Type 2 Diabetes","Metabolic")])
-        # Biomarkers
-        txn.insert("Biomarkers", ["biomarker_id","name","unit"],
-                   [("biomarker_hba1c","HbA1c","%")])
-        # Drugs
-        txn.insert("Drugs", ["drug_id","name","mechanism"],
-                   [("drug_metformin","Metformin","Reduces hepatic glucose production")])
-    
+        txn.insert("Authors", ["author_id","name","affiliation"], [("author_001","Alice Chen","University X")])
+        txn.insert("Methods", ["method_id","name","category"], [("method_lstm","LSTM","Deep Learning")])
+        txn.insert("Datasets", ["dataset_id","name","description"], [("dataset_ukb","UK Biobank","Large scale biomedical dataset")])
+        txn.insert("Diseases", ["disease_id","name","type"], [("disease_t2d","Type 2 Diabetes","Metabolic")])
+        txn.insert("Biomarkers", ["biomarker_id","name","unit"], [("biomarker_hba1c","HbA1c","%")])
+        txn.insert("Drugs", ["drug_id","name","mechanism"], [("drug_metformin","Metformin","Reduces hepatic glucose production")])
+
     def insert_edges(txn):
         txn.insert("PaperUsesMethod", ["paper_id","method_id"], [("paper_001","method_lstm")])
         txn.insert("PaperStudiesDisease", ["paper_id","disease_id"], [("paper_001","disease_t2d")])
@@ -129,13 +120,15 @@ def insert_initial_data(database):
         txn.insert("PaperMentionsBiomarker", ["paper_id","biomarker_id"], [("paper_001","biomarker_hba1c")])
         txn.insert("DrugTreatsDisease", ["drug_id","disease_id"], [("drug_metformin","disease_t2d")])
         txn.insert("AuthorWrotePaper", ["author_id","paper_id"], [("author_001","paper_001")])
-    
+
+    print("Inserting node data...")
     database.run_in_transaction(insert_nodes)
+    print("Inserting edge data...")
     database.run_in_transaction(insert_edges)
     print("Sample diabetes research data inserted ✅")
 
 def create_graph(database, graph_name):
-    """Create property graph for diabetes research."""
+    """Create property graph."""
     ddl = f"""
     CREATE OR REPLACE PROPERTY GRAPH {graph_name}
       NODE TABLES (
@@ -158,3 +151,92 @@ def create_graph(database, graph_name):
     """
     database.update_ddl([ddl]).result()
     print(f"Graph {graph_name} created ✅")
+
+def print_config(project_id, instance_id, database_id, graph_name, region):
+    print("\n" + "="*60)
+    print("Current Configuration (from environment or args):")
+    print("="*60)
+    print(f"  PROJECT_ID:   {project_id or 'Not set'}")
+    print(f"  INSTANCE_ID:  {instance_id}")
+    print(f"  DATABASE_ID:  {database_id}")
+    print(f"  GRAPH_NAME:   {graph_name}")
+    print(f"  REGION:       {region}")
+    print("="*60 + "\n")
+
+def main():
+    parser = argparse.ArgumentParser(description="Setup Diabetes Research Database")
+    parser.add_argument("--project", help="GCP Project ID (overrides env)")
+    parser.add_argument("--instance", help="Spanner Instance ID (overrides env)")
+    parser.add_argument("--database", help="Spanner Database ID (overrides env)")
+    parser.add_argument("--graph", help="Graph name (overrides env)")
+    parser.add_argument("--region", help="GCP Region (overrides env)")
+    parser.add_argument("--skip-instance", action="store_true", help="Skip instance creation")
+    parser.add_argument("--force", action="store_true", help="Delete & recreate database")
+    parser.add_argument("--show-config", action="store_true", help="Show config and exit")
+    args = parser.parse_args()
+
+    project_id = args.project or PROJECT_ID
+    instance_id = args.instance or INSTANCE_ID
+    database_id = args.database or DATABASE_ID
+    graph_name = args.graph or GRAPH_NAME
+    region = args.region or REGION
+
+    if args.show_config:
+        print_config(project_id, instance_id, database_id, graph_name, region)
+        return
+
+    if not project_id:
+        print("ERROR: PROJECT_ID is required.")
+        return
+
+    client = spanner.Client(project=project_id)
+    instance = client.instance(instance_id)
+    instance_exists = instance.exists()
+
+    if instance_exists:
+        print(f"Using existing instance: {instance_id}")
+    elif not args.skip_instance:
+        print(f"Creating instance {instance_id}...")
+        from google.cloud.spanner_admin_instance_v1 import Instance as InstancePB, CreateInstanceRequest
+        config_name = f"projects/{project_id}/instanceConfigs/regional-{region}"
+        instance_pb = InstancePB(
+            name=f"projects/{project_id}/instances/{instance_id}",
+            config=config_name,
+            display_name="Diabetes Research Network",
+            processing_units=100,
+            edition=InstancePB.Edition.ENTERPRISE,
+        )
+        request = CreateInstanceRequest(parent=f"projects/{project_id}", instance_id=instance_id, instance=instance_pb)
+        operation = client.instance_admin_api.create_instance(request=request)
+        print("Waiting for instance creation...")
+        operation.result()
+        print("Instance created!")
+        instance = client.instance(instance_id)
+    else:
+        print(f"ERROR: Instance {instance_id} does not exist and --skip-instance was specified.")
+        return
+
+    database = instance.database(database_id)
+    if database.exists():
+        if args.force:
+            print(f"Deleting existing database {database_id} (--force)...")
+            database.drop()
+            time.sleep(5)
+        else:
+            print(f"Database {database_id} already exists. Use --force to recreate.")
+            return
+
+    print(f"Creating database {database_id}...")
+    database = instance.database(database_id, ddl_statements=DDL_STATEMENTS)
+    database.create().result()
+    print("Database created!")
+
+    insert_initial_data(database)
+    create_graph(database, graph_name)
+
+    print("\n✅ Database setup complete!")
+    print(f"Instance: {instance_id}, Database: {database_id}, Graph: {graph_name}")
+
+if __name__ == "__main__":
+    main()
+    os._exit(0)
