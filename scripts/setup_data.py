@@ -139,13 +139,13 @@ def create_graph(database, graph_name):
     ddl = f"""
     CREATE PROPERTY GRAPH {graph_name}
       NODE TABLES (
-        Papers KEY (paper_id) LABEL Paper PROPERTIES (ALL_COLUMNS),
-        Authors KEY (author_id) LABEL Author PROPERTIES (ALL_COLUMNS),
-        Methods KEY (method_id) LABEL Method PROPERTIES (ALL_COLUMNS),
-        Datasets KEY (dataset_id) LABEL Dataset PROPERTIES (ALL_COLUMNS),
-        Diseases KEY (disease_id) LABEL Disease PROPERTIES (ALL_COLUMNS),
-        Biomarkers KEY (biomarker_id) LABEL Biomarker PROPERTIES (ALL_COLUMNS),
-        Drugs KEY (drug_id) LABEL Drug PROPERTIES (ALL_COLUMNS)
+        Papers KEY (paper_id) LABEL Paper PROPERTIES (paper_id, title, abstract, publication_date, journal),
+        Authors KEY (author_id) LABEL Author PROPERTIES (author_id, name, affiliation),
+        Methods KEY (method_id) LABEL Method PROPERTIES (method_id, name, category),
+        Datasets KEY (dataset_id) LABEL Dataset PROPERTIES (dataset_id, name, description),
+        Diseases KEY (disease_id) LABEL Disease PROPERTIES (disease_id, name, type),
+        Biomarkers KEY (biomarker_id) LABEL Biomarker PROPERTIES (biomarker_id, name, unit)),
+        Drugs KEY (drug_id) LABEL Drug PROPERTIES (drug_id, name, mechanism)
       )
       EDGE TABLES (
         PaperUsesMethod KEY (paper_id, method_id)
