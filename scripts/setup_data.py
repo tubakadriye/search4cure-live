@@ -164,19 +164,19 @@ def create_graph(database, graph_name):
             SOURCE KEY (paper_id) REFERENCES Papers
             DESTINATION KEY (author_id) REFERENCES Authors
             LABEL HAS_AUTHOR,
-        PaperUsesDataset KEY (paper_id, dataset_id) 
+        PaperUsesDataset KEY (paper_id, dataset_id)
             SOURCE KEY (paper_id) REFERENCES Papers
-            DESTINATION KEY (dataset_id) Datasets
+            DESTINATION KEY (dataset_id) REFERENCES Datasets
             LABEL USES_DATASET,
-        PaperMentionsBiomarker KEY (paper_id, biomarker_id) 
+        PaperMentionsBiomarker KEY (paper_id, biomarker_id)
             SOURCE KEY (paper_id) REFERENCES Papers
             DESTINATION KEY (biomarker_id) REFERENCES Biomarkers
             LABEL MENTIONS_BIOMARK,
-        DrugTreatsDisease KEY (drug_id, disease_id) 
+        DrugTreatsDisease KEY (drug_id, disease_id)
             SOURCE KEY (drug_id) REFERENCES Drugs
             DESTINATION KEY (disease_id) REFERENCES Diseases
             LABEL TREATS,
-        AuthorWrotePaper KEY (author_id, paper_id) 
+        AuthorWrotePaper KEY (author_id, paper_id)
             SOURCE KEY (author_id) REFERENCES Authors
             DESTINATION KEY (paper_id) REFERENCES Papers
             LABEL WROTE
@@ -186,6 +186,7 @@ def create_graph(database, graph_name):
     operation = database.update_ddl([ddl])
     operation.result()
     print(f"Graph {graph_name} created ✅")
+
 
 def create_instance_with_enterprise(client, project_id, instance_id, region):
     """Create a Spanner instance with ENTERPRISE edition using the admin API."""
