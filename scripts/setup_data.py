@@ -135,7 +135,6 @@ def insert_initial_data(database):
     print("Sample diabetes research data inserted ✅")
 
 def create_graph(database, graph_name):
-    """Create property graph for diabetes research."""
     ddl = f"""
     CREATE PROPERTY GRAPH {graph_name}
       NODE TABLES (
@@ -144,7 +143,7 @@ def create_graph(database, graph_name):
         Methods KEY (method_id) LABEL Method PROPERTIES (method_id, name, category),
         Datasets KEY (dataset_id) LABEL Dataset PROPERTIES (dataset_id, name, description),
         Diseases KEY (disease_id) LABEL Disease PROPERTIES (disease_id, name, type),
-        Biomarkers KEY (biomarker_id) LABEL Biomarker PROPERTIES (biomarker_id, name, unit)),
+        Biomarkers KEY (biomarker_id) LABEL Biomarker PROPERTIES (biomarker_id, name, unit),
         Drugs KEY (drug_id) LABEL Drug PROPERTIES (drug_id, name, mechanism)
       )
       EDGE TABLES (
@@ -186,6 +185,7 @@ def create_graph(database, graph_name):
     operation = database.update_ddl([ddl])
     operation.result()
     print(f"Graph {graph_name} created ✅")
+
 
 
 def create_instance_with_enterprise(client, project_id, instance_id, region):
