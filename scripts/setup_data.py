@@ -259,9 +259,13 @@ def main():
     print(f"  Region:    {region}")
     print("=" * 60 + "\n")
 
+
     client = spanner.Client(project=project_id)
+
     instance = client.instance(instance_id)
+    print("Checking instance exists...")
     instance_exists = instance.exists()
+    print(f"Instance exists? {instance_exists}")
 
     if instance_exists:
         print(f"Instance {instance_id} already exists. Using existing instance.")
@@ -278,11 +282,13 @@ def main():
         return
 
     database = instance.database(database_id)
+    print("Checking database exists...")
     database_exists = database.exists()
     if database_exists:
         if args.force:
             print(f"Deleting existing database {database_id} (--force)...")
-            database.drop()
+            operation = database.drop()
+            operation.result()  # wait for deletion
             print("Database deleted. Waiting 5 seconds...")
             time.sleep(5)
         else:
