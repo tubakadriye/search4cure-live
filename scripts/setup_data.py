@@ -128,9 +128,9 @@ def insert_initial_data(database):
     print("Sample diabetes research data inserted ✅")
 
 def create_graph(database, graph_name):
-    """Create property graph."""
+    """Create property graph for diabetes research."""
     ddl = f"""
-    CREATE OR REPLACE PROPERTY GRAPH {graph_name}
+    CREATE PROPERTY GRAPH {graph_name}
       NODE TABLES (
         Papers KEY (paper_id) LABEL Paper PROPERTIES (paper_id, title, abstract, publication_date, journal),
         Authors KEY (author_id) LABEL Author PROPERTIES (author_id, name, affiliation),
