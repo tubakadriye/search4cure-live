@@ -101,6 +101,16 @@ DDL_STATEMENTS = [
         author_id STRING(36) NOT NULL,
         paper_id STRING(36) NOT NULL
     ) PRIMARY KEY (author_id, paper_id)""",
+
+    """CREATE TABLE PaperCitesPaper (
+        citing_paper_id STRING(MAX) NOT NULL,
+        cited_paper_id STRING(MAX) NOT NULL
+    ) PRIMARY KEY(citing_paper_id, cited_paper_id)""",
+
+    """CREATE TABLE PaperHasAuthor (
+        paper_id STRING(MAX) NOT NULL,
+        author_id STRING(MAX) NOT NULL
+    ) PRIMARY KEY(paper_id, author_id)"""
 ]
 
 def insert_initial_data(database):
@@ -127,6 +137,8 @@ def insert_initial_data(database):
         txn.insert("PaperMentionsBiomarker", ["paper_id","biomarker_id"], [("paper_001","biomarker_hba1c")])
         txn.insert("DrugTreatsDisease", ["drug_id","disease_id"], [("drug_metformin","disease_t2d")])
         txn.insert("AuthorWrotePaper", ["author_id","paper_id"], [("author_001","paper_001")])
+        txn.insert("PaperCitesPaper", ["citing_paper_id", "cited_paper_id"], [("paper_001", "paper_002")])
+        txn.insert("PaperHasAuthor", ["paper_id", "author_id"], [("paper_001", "author_001")])
 
     print("Inserting node data...")
     database.run_in_transaction(insert_nodes)
