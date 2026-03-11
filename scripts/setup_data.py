@@ -233,22 +233,54 @@ def insert_initial_data(database):
     def insert_nodes(txn):
         txn.insert(
             "Papers",
-            columns = ["paper_id", "title", "abstract", "publication_date", "journal"],
-            values = [("paper_001", "Predicting Diabetes Progression with Deep Learning",
-              "We applied LSTM to predict HbA1c levels in type 2 diabetes.",
-              "2023-05-15", "Diabetes Journal")]
+            columns = ["paper_id", "title", "abstract", "url"],
+            values = [(
+                "paper_001",
+                "Predicting Diabetes Progression with Deep Learning",
+                "We applied LSTM to predict HbA1c levels in type 2 diabetes.",
+                "https://example.com/paper"
+            )]
         )
         txn.insert(
             "Pages",
             ["page_id","paper_id","page_number","text"],
             [("page_001","paper_001",1,"Introduction to diabetes prediction")]
         )
-        txn.insert("Authors", ["author_id","name","affiliation"], [("author_001","Alice Chen","University X")])
-        txn.insert("Methods", ["method_id","name","category"], [("method_lstm","LSTM","Deep Learning")])
-        txn.insert("Datasets", ["dataset_id","name","description"], [("dataset_ukb","UK Biobank","Large scale biomedical dataset")])
-        txn.insert("Diseases", ["disease_id","name","type"], [("disease_t2d","Type 2 Diabetes","Metabolic")])
-        txn.insert("Biomarkers", ["biomarker_id","name","unit"], [("biomarker_hba1c","HbA1c","%")])
-        txn.insert("Drugs", ["drug_id","name","mechanism"], [("drug_metformin","Metformin","Reduces hepatic glucose production")])
+        txn.insert(
+            "Authors",
+            ["author_id","name"],
+            [("author_001","Alice Chen")]
+        )
+
+        txn.insert(
+            "Methods",
+            ["method_id","name"],
+            [("method_lstm","LSTM")]
+        )
+
+        txn.insert(
+            "Datasets",
+            ["dataset_id","name"],
+            [("dataset_ukb","UK Biobank")]
+        )
+
+        txn.insert(
+            "Diseases",
+            ["disease_id","name"],
+            [("disease_t2d","Type 2 Diabetes")]
+        )
+
+        txn.insert(
+            "Biomarkers",
+            ["biomarker_id","name"],
+            [("biomarker_hba1c","HbA1c")]
+        )
+
+        txn.insert(
+            "Drugs",
+            ["drug_id","name"],
+            [("drug_metformin","Metformin")]
+        )
 
     def insert_edges(txn):
         txn.insert("PaperUsesMethod", ["paper_id","method_id"], [("paper_001","method_lstm")])
