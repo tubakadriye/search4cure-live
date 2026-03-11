@@ -31,9 +31,15 @@ SCHEMA_FILE = "../backend/database/schema.sql"
 def load_schema():
 
     with open(SCHEMA_FILE, "r") as f:
-        schema = f.read()
+        lines = f.readlines()
+        #schema = f.read()
+    sql = "\n".join(
+        line for line in lines if not line.strip().startswith("--")
+    )
+    
+    statements = [s.strip() for s in sql.split(";") if s.strip()]
 
-    statements = [s.strip() for s in schema.split(";") if s.strip()]
+    #statements = [s.strip() for s in schema.split(";") if s.strip()]
     return statements
 
 # # DDL: Nodes and Edges
