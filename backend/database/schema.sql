@@ -154,6 +154,11 @@ CREATE TABLE PaperMentionsOutcome (
     outcome_id STRING(36) NOT NULL
 ) PRIMARY KEY (paper_id, outcome_id);
 
+CREATE TABLE DrugTreatsDisease (
+    drug_id STRING(36) NOT NULL,
+    disease_id STRING(36) NOT NULL
+) PRIMARY KEY (drug_id, disease_id);
+
 -- =========================
 -- VECTOR INDEXES
 -- =========================

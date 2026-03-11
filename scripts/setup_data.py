@@ -301,20 +301,19 @@ def create_graph(database, graph_name):
     ddl = f"""
     CREATE PROPERTY GRAPH {graph_name}
       NODE TABLES (
-        Papers KEY (paper_id) LABEL Paper PROPERTIES (paper_id, title, abstract, publication_date, journal),
+        Papers KEY (paper_id) LABEL Paper PROPERTIES (paper_id, title, abstract, url),
         Pages KEY (page_id) LABEL Page PROPERTIES (page_id, paper_id, page_number, text),
-        Authors KEY (author_id) LABEL Author PROPERTIES (author_id, name, affiliation),
-        Methods KEY (method_id) LABEL Method PROPERTIES (method_id, name, category),
-        Datasets KEY (dataset_id) LABEL Dataset PROPERTIES (dataset_id, name, description),
-        Diseases KEY (disease_id) LABEL Disease PROPERTIES (disease_id, name, type),
-        Biomarkers KEY (biomarker_id) LABEL Biomarker PROPERTIES (biomarker_id, name, unit),
-        Drugs KEY (drug_id) LABEL Drug PROPERTIES (drug_id, name, mechanism),
-        Images KEY (image_id) LABEL Image PROPERTIES (image_id, paper_id, page_number, gcs_key, width, height, caption),
-        Tables KEY (table_id) LABEL Table PROPERTIES (table_id, paper_id, page_number, table_json),
+        Authors KEY (author_id) LABEL Author PROPERTIES (author_id, name),
+        Methods KEY (method_id) LABEL Method PROPERTIES (method_id, name),
+        Datasets KEY (dataset_id) LABEL Dataset PROPERTIES (dataset_id, name),
+        Diseases KEY (disease_id) LABEL Disease PROPERTIES (disease_id, name),
+        Biomarkers KEY (biomarker_id) LABEL Biomarker PROPERTIES (biomarker_id, name),
+        Drugs KEY (drug_id) LABEL Drug PROPERTIES (drug_id, name),
+        Images KEY (image_id) LABEL Image PROPERTIES (image_id, paper_id, page_number, path, caption),
+        Tables KEY (table_id) LABEL Table PROPERTIES (table_id, paper_id, page_number, table_data),
         Genes KEY (gene_id) LABEL Gene PROPERTIES (gene_id, name),
         Outcomes KEY (outcome_id) LABEL Outcome PROPERTIES (outcome_id, name)
-
-      )
+        )
       EDGE TABLES (
         PaperUsesMethod KEY (paper_id, method_id)
             SOURCE KEY (paper_id) REFERENCES Papers
