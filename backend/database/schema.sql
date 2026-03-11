@@ -160,20 +160,31 @@ CREATE TABLE PaperMentionsOutcome (
 
 CREATE VECTOR INDEX idx_paper_embedding
 ON Papers(text_embedding)
-OPTIONS(distance_type="COSINE");
+OPTIONS(
+  distance_type="COSINE",
+  vector_length=768
+);
 
 CREATE VECTOR INDEX idx_page_embedding
-ON Pages(text_embedding)
-OPTIONS(distance_type="COSINE");
+ON Pages(page_embedding)
+OPTIONS(
+  distance_type="COSINE",
+  vector_length=768);
 
 CREATE VECTOR INDEX idx_image_embedding
 ON Images(image_embedding)
-OPTIONS(distance_type="COSINE");
+OPTIONS(
+  distance_type="COSINE",
+  vector_length=1408);
 
 CREATE VECTOR INDEX idx_caption_embedding
 ON Images(caption_embedding)
-OPTIONS(distance_type="COSINE");
+OPTIONS(
+  distance_type="COSINE",
+  vector_length=768);
 
 CREATE VECTOR INDEX idx_table_embedding
 ON Tables(table_embedding)
-OPTIONS(distance_type="COSINE");
+OPTIONS(
+  distance_type="COSINE",
+  vector_length=768);
