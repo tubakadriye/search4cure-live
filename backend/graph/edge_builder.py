@@ -22,7 +22,7 @@ def build_edges(paper, pages, entities, images=None, tables=None):
 
     for a in entities.get("authors", []):
         edges.append({
-            "table": "AuthorWrotePaper",
+            "table": "PaperHasAuthor",
             "paper_id": paper_id,
             "author_id": a.lower().replace(" ", "_")
         })
@@ -86,11 +86,19 @@ def build_edges(paper, pages, entities, images=None, tables=None):
     # -----------------------------
     if images:
         for img in images:
+            # Link image to paper
             edges.append({
                 "table": "PaperHasImage",
                 "paper_id": paper_id,
                 "image_id": img["image_id"]
             })
+            # Link image to page
+            if "page_id" in img:
+                edges.append({
+                    "table": "PageHasImage",
+                    "page_id": img["page_id"],
+                    "image_id": img["image_id"]
+                })
 
     # -----------------------------
     # Tables

@@ -289,7 +289,7 @@ def insert_initial_data(database):
         txn.insert("PaperMentionsBiomarker", ["paper_id","biomarker_id"], [("paper_001","biomarker_hba1c")])
         txn.insert("DrugTreatsDisease", ["drug_id","disease_id"], [("drug_metformin","disease_t2d")])
         txn.insert("PaperHasAuthor", ["paper_id","author_id"], [("paper_001","author_001")])
-        txn.insert("PaperCitesPaper", ["citing_paper_id", "cited_paper_id"], [("paper_001", "paper_002")])
+        txn.insert("PaperCitesPaper", ["citing_paper_id", "cited_paper_id"], [("paper_001")])
 
     print("Inserting node data...")
     database.run_in_transaction(insert_nodes)
@@ -309,8 +309,8 @@ def create_graph(database, graph_name):
         Diseases KEY (disease_id) LABEL Disease PROPERTIES (disease_id, name),
         Biomarkers KEY (biomarker_id) LABEL Biomarker PROPERTIES (biomarker_id, name),
         Drugs KEY (drug_id) LABEL Drug PROPERTIES (drug_id, name),
-        Images KEY (image_id) LABEL Image PROPERTIES (image_id, paper_id, page_number, path, caption),
-        Tables KEY (table_id) LABEL Table PROPERTIES (table_id, paper_id, page_number, table_data),
+        Images KEY (image_id) LABEL Image PROPERTIES (image_id, paper_id, page_number, gcs_key, caption),
+        Tables KEY (table_id) LABEL Table PROPERTIES (table_id, paper_id, page_number, table_json),
         Genes KEY (gene_id) LABEL Gene PROPERTIES (gene_id, name),
         Outcomes KEY (outcome_id) LABEL Outcome PROPERTIES (outcome_id, name)
         )
@@ -366,7 +366,15 @@ def create_graph(database, graph_name):
         PageHasImage KEY (page_id, image_id)
             SOURCE KEY (page_id) REFERENCES Pages
             DESTINATION KEY (image_id) REFERENCES Images
-            LABEL HAS_IMAGE
+            LABEL HAS_IMAGE,
+        PaperMentionsDrug KEY (paper_id, drug_id)
+            SOURCE KEY (paper_id) REFERENCES Papers
+            DESTINATION KEY (drug_id) REFERENCES Drugs
+            LABEL MENTIONS_DRUG,
+        PaperMentionsOutcome KEY (paper_id, outcome_id)
+            SOURCE KEY (paper_id) REFERENCES Papers
+            DESTINATION KEY (outcome_id) REFERENCES Outcomes
+            LABEL MENTIONS_OUTCOME
 
 
 
