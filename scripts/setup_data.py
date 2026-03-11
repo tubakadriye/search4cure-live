@@ -354,7 +354,7 @@ def create_graph(database, graph_name):
         PaperHasImage KEY (paper_id, image_id)
             SOURCE KEY (paper_id) REFERENCES Papers
             DESTINATION KEY (image_id) REFERENCES Images
-            LABEL HAS_IMAGE,
+            LABEL HAS_PAPER_IMAGE,
         PaperHasTable KEY (paper_id, table_id)
             SOURCE KEY (paper_id) REFERENCES Papers
             DESTINATION KEY (table_id) REFERENCES Tables
@@ -374,7 +374,7 @@ def create_graph(database, graph_name):
         PageHasImage KEY (page_id, image_id)
             SOURCE KEY (page_id) REFERENCES Pages
             DESTINATION KEY (image_id) REFERENCES Images
-            LABEL HAS_IMAGE,
+            LABEL HAS_PAGE_IMAGE,
         PaperMentionsDrug KEY (paper_id, drug_id)
             SOURCE KEY (paper_id) REFERENCES Papers
             DESTINATION KEY (drug_id) REFERENCES Drugs
