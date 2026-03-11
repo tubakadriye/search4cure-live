@@ -1,7 +1,7 @@
 [project]
-name = "backend"
+name = "search4cure"
 version = "0.1.0"
-description = "Add your description here"
+description = "Multimdal Agentic Graph RAG system for diabetes research"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -18,4 +18,15 @@ dependencies = [
     "python-multipart>=0.0.21",
     "uvicorn>=0.40.0",
     "websockets>=15.0.1",
+    "langchain-community",
+    "arxiv",
+    "pymupdf",
+    "pillow",
+    "tqdm",
+    "tiktoken",
+    "google-generativeai",
+    "transformers",
+    "torch",
+
+
 ]

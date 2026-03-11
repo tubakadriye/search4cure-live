@@ -26,19 +26,16 @@ gcloud services enable \
 
 ## Purpose of Services
 
-- compute.googleapis.com → Compute resources for Cloud Run/Vertex AI
+| Service                         | Purpose                         |
+| ------------------------------- | ------------------------------- |
+| compute.googleapis.com          | Compute resources               |
+| aiplatform.googleapis.com       | Vertex AI (Gemini + embeddings) |
+| run.googleapis.com              | Cloud Run deployment            |
+| cloudbuild.googleapis.com       | Container builds                |
+| artifactregistry.googleapis.com | Docker storage                  |
+| spanner.googleapis.com          | Graph database                  |
+| storage.googleapis.com          | File storage                    |
 
-- aiplatform.googleapis.com → Vertex AI (Gemini & embeddings)
-
-- run.googleapis.com → Deploy backend on Cloud Run
-
-- cloudbuild.googleapis.com → Build Docker images
-
-- artifactregistry.googleapis.com → Store Docker images
-
-- spanner.googleapis.com → Graph database for Graph RAG
-
-- storage.googleapis.com → Store files (images, CSVs, etc.)
 
 
 ### 3. Clone the Repository
@@ -139,12 +136,12 @@ The script automatically generates a `.env` file containing all required configu
 
 ---
 
-### 7. Next Step: Initialize the Graph Database
+## Initialize the Graph Database
 
 After the setup completes, initialize the **Diabetes Research Graph**.
 
 ```bash
-python backend/setup_graph.py --project=$PROJECT_ID --force
+python backend/setup_data.py --project=$PROJECT_ID --force
 ```
 
 This command will:
@@ -157,7 +154,7 @@ This command will:
 
 - Insert sample research data
 
-### 8. Backend Virtual Environment Setup
+## Backend Virtual Environment Setup
 
 **Option 1 — Activate .venv manually:**
 
@@ -177,63 +174,4 @@ uv run python ../scripts/setup_data.py
 ```
 
 **Tip:** Always run from inside .venv or using uv run to ensure dependencies (like python-dotenv) are correctly loaded.
-
-### 9. Final Architecture After Setup
-
-After initialization, the Search4Cure system architecture will look like this:
-
-User
- │
- ▼
-Streamlit UI
- │
- ▼
-Cloud Run API
- │
- ▼
-Agent Orchestrator (ADK)
- │
- ▼
-Graph RAG
- ├ Spanner Graph (research relationships)
- └ Vector embeddings
- │
- ▼
-Gemini (Vertex AI)
-
-
-
-
-## Cloud Setup (Automated with `init.sh`)
-
-Instead of manually running all commands, you can use the included `init.sh` script to fully set up your project on Google Cloud Shell.
-
-### Steps:
-
-1. **Pull the latest repo**
-```bash
-git clone git@github.com:tubakadriye/search4cure-live.git
-cd search4cure-live
-```
-2. **Make init.sh executable**
-```
-chmod +x init.sh
-```
-3. **Run init.sh**
-```
-./init.sh
-```
-
-This script automatically:
-
-- Sets your Google Cloud project (gcloud config set project …)
-
-- Adds the environment tag (Development)
-
-- Enables required services (compute.googleapis.com, aiplatform.googleapis.com, etc.)
-
-- Links your billing account
-
-- Installs Python dependencies
-
 

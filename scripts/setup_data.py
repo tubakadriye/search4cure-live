@@ -1,7 +1,7 @@
 """
 Diabetes Research Network Database Setup Script
-Run: python setup_database.py
-Or:  python setup_database.py --project=your-project-id
+Run: python setup_data.py
+Or:  python setup_data.py --project=your-project-id
 """
 
 from google.cloud import spanner
@@ -18,100 +18,208 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Config
-INSTANCE_ID = os.getenv("INSTANCE_ID", "research-network")
-DATABASE_ID = os.getenv("DATABASE_ID", "graph-db")
+PROJECT_ID = os.getenv("PROJECT_ID")
+INSTANCE_ID = os.getenv("INSTANCE_ID")
+DATABASE_ID = os.getenv("DATABASE_ID")
 GRAPH_NAME = os.getenv("GRAPH_NAME", "DiabetesGraph")
-PROJECT_ID = os.getenv("PROJECT_ID", None)
 REGION = os.getenv("REGION", "us-central1")
 
-# DDL: Nodes and Edges
-DDL_STATEMENTS = [
-    # Nodes
-    """CREATE TABLE Papers (
-        paper_id STRING(36) NOT NULL,
-        title STRING(MAX) NOT NULL,
-        abstract STRING(MAX),
-        publication_date DATE,
-        journal STRING(100)
-    ) PRIMARY KEY (paper_id)""",
+SCHEMA_FILE = "backend/database/schema.sql"
 
-    """CREATE TABLE Authors (
-        author_id STRING(36) NOT NULL,
-        name STRING(100) NOT NULL,
-        affiliation STRING(200)
-    ) PRIMARY KEY (author_id)""",
 
-    """CREATE TABLE Methods (
-        method_id STRING(36) NOT NULL,
-        name STRING(100) NOT NULL,
-        category STRING(50)
-    ) PRIMARY KEY (method_id)""",
+def load_schema():
 
-    """CREATE TABLE Datasets (
-        dataset_id STRING(36) NOT NULL,
-        name STRING(100) NOT NULL,
-        description STRING(MAX)
-    ) PRIMARY KEY (dataset_id)""",
+    with open(SCHEMA_FILE, "r") as f:
+        schema = f.read()
 
-    """CREATE TABLE Diseases (
-        disease_id STRING(36) NOT NULL,
-        name STRING(100) NOT NULL,
-        type STRING(50)
-    ) PRIMARY KEY (disease_id)""",
+    statements = [s.strip() for s in schema.split(";") if s.strip()]
+    return statements
 
-    """CREATE TABLE Biomarkers (
-        biomarker_id STRING(36) NOT NULL,
-        name STRING(100) NOT NULL,
-        unit STRING(20)
-    ) PRIMARY KEY (biomarker_id)""",
+# # DDL: Nodes and Edges
+# DDL_STATEMENTS = [
+#     # Nodes
+#     """CREATE TABLE Papers (
+#         paper_id STRING(36) NOT NULL,
+#         title STRING(MAX) NOT NULL,
+#         abstract STRING(MAX),
+#         publication_date DATE,
+#         journal STRING(100),
+#         text_embedding ARRAY<FLOAT32>(768)
+#     ) PRIMARY KEY (paper_id)""",
 
-    """CREATE TABLE Drugs (
-        drug_id STRING(36) NOT NULL,
-        name STRING(100) NOT NULL,
-        mechanism STRING(MAX)
-    ) PRIMARY KEY (drug_id)""",
+#     """CREATE TABLE Pages (
+#         page_id STRING(64) NOT NULL,
+#         paper_id STRING(36),
+#         page_number INT64,
+#         text STRING(MAX),
+#         text_embedding ARRAY<FLOAT32>(768)
+#     ) PRIMARY KEY(page_id)""",
 
-    # Edges
-    """CREATE TABLE PaperUsesMethod (
-        paper_id STRING(36) NOT NULL,
-        method_id STRING(36) NOT NULL
-    ) PRIMARY KEY (paper_id, method_id)""",
+#     """CREATE TABLE Authors (
+#         author_id STRING(36) NOT NULL,
+#         name STRING(100) NOT NULL,
+#         affiliation STRING(200)
+#     ) PRIMARY KEY (author_id)""",
 
-    """CREATE TABLE PaperStudiesDisease (
-        paper_id STRING(36) NOT NULL,
-        disease_id STRING(36) NOT NULL
-    ) PRIMARY KEY (paper_id, disease_id)""",
+#     """CREATE TABLE Methods (
+#         method_id STRING(36) NOT NULL,
+#         name STRING(100) NOT NULL,
+#         category STRING(50)
+#     ) PRIMARY KEY (method_id)""",
 
-    """CREATE TABLE PaperUsesDataset (
-        paper_id STRING(36) NOT NULL,
-        dataset_id STRING(36) NOT NULL
-    ) PRIMARY KEY (paper_id, dataset_id)""",
+#     """CREATE TABLE Datasets (
+#         dataset_id STRING(36) NOT NULL,
+#         name STRING(100) NOT NULL,
+#         description STRING(MAX)
+#     ) PRIMARY KEY (dataset_id)""",
 
-    """CREATE TABLE PaperMentionsBiomarker (
-        paper_id STRING(36) NOT NULL,
-        biomarker_id STRING(36) NOT NULL
-    ) PRIMARY KEY (paper_id, biomarker_id)""",
+#     """CREATE TABLE Diseases (
+#         disease_id STRING(36) NOT NULL,
+#         name STRING(100) NOT NULL,
+#         type STRING(50)
+#     ) PRIMARY KEY (disease_id)""",
 
-    """CREATE TABLE DrugTreatsDisease (
-        drug_id STRING(36) NOT NULL,
-        disease_id STRING(36) NOT NULL
-    ) PRIMARY KEY (drug_id, disease_id)""",
+#     """CREATE TABLE Biomarkers (
+#         biomarker_id STRING(36) NOT NULL,
+#         name STRING(100) NOT NULL,
+#         unit STRING(20)
+#     ) PRIMARY KEY (biomarker_id)""",
 
-    """CREATE TABLE AuthorWrotePaper (
-        author_id STRING(36) NOT NULL,
-        paper_id STRING(36) NOT NULL
-    ) PRIMARY KEY (author_id, paper_id)""",
+#     """CREATE TABLE Drugs (
+#         drug_id STRING(36) NOT NULL,
+#         name STRING(100) NOT NULL,
+#         mechanism STRING(MAX)
+#     ) PRIMARY KEY (drug_id)""",
 
-    """CREATE TABLE PaperCitesPaper (
-        citing_paper_id STRING(MAX) NOT NULL,
-        cited_paper_id STRING(MAX) NOT NULL
-    ) PRIMARY KEY(citing_paper_id, cited_paper_id)""",
+#     """CREATE TABLE Images (
+#         image_id STRING(36) NOT NULL,
+#         paper_id STRING(36),
+#         page_number INT64,
+#         gcs_key STRING(MAX),
+#         width INT64,
+#         height INT64,
+#         image_embedding ARRAY<FLOAT32>(512),
+#         caption STRING(MAX),
+#         caption_embedding ARRAY<FLOAT32>(768)
+#     ) PRIMARY KEY(image_id)""",
 
-    """CREATE TABLE PaperHasAuthor (
-        paper_id STRING(MAX) NOT NULL,
-        author_id STRING(MAX) NOT NULL
-    ) PRIMARY KEY(paper_id, author_id)"""
-]
+#     """CREATE TABLE Tables (
+#         table_id STRING(36) NOT NULL,
+#         paper_id STRING(36),
+#         page_number INT64,
+#         table_json STRING(MAX),
+#         table_embedding ARRAY<FLOAT32>(768)
+#     ) PRIMARY KEY(table_id)""",
+
+#     """CREATE TABLE Outcomes (
+#         outcome_id STRING(36) NOT NULL,
+#         name STRING(100) NOT NULL
+#     ) PRIMARY KEY (outcome_id)""",
+
+#     """CREATE TABLE Genes (
+#         gene_id STRING(36) NOT NULL,
+#         name STRING(100) NOT NULL
+#     ) PRIMARY KEY (gene_id)
+#     """, 
+
+
+
+
+#     # Edges
+#     """CREATE TABLE PaperUsesMethod (
+#         paper_id STRING(36) NOT NULL,
+#         method_id STRING(36) NOT NULL
+#     ) PRIMARY KEY (paper_id, method_id)""",
+
+#     """CREATE TABLE PaperStudiesDisease (
+#         paper_id STRING(36) NOT NULL,
+#         disease_id STRING(36) NOT NULL
+#     ) PRIMARY KEY (paper_id, disease_id)""",
+
+#     """CREATE TABLE PaperUsesDataset (
+#         paper_id STRING(36) NOT NULL,
+#         dataset_id STRING(36) NOT NULL
+#     ) PRIMARY KEY (paper_id, dataset_id)""",
+
+#     """CREATE TABLE PaperMentionsBiomarker (
+#         paper_id STRING(36) NOT NULL,
+#         biomarker_id STRING(36) NOT NULL
+#     ) PRIMARY KEY (paper_id, biomarker_id)""",
+
+#     """CREATE TABLE DrugTreatsDisease (
+#         drug_id STRING(36) NOT NULL,
+#         disease_id STRING(36) NOT NULL
+#     ) PRIMARY KEY (drug_id, disease_id)""",
+
+#     """CREATE TABLE AuthorWrotePaper (
+#         author_id STRING(36) NOT NULL,
+#         paper_id STRING(36) NOT NULL
+#     ) PRIMARY KEY (author_id, paper_id)""",
+
+#     """CREATE TABLE PaperCitesPaper (
+#         citing_paper_id STRING(MAX) NOT NULL,
+#         cited_paper_id STRING(MAX) NOT NULL
+#     ) PRIMARY KEY(citing_paper_id, cited_paper_id)""",
+
+
+#     """CREATE TABLE PaperHasImage (
+#         paper_id STRING(36) NOT NULL,
+#         image_id STRING(36) NOT NULL
+#     ) PRIMARY KEY (paper_id, image_id)""",
+
+#     """CREATE TABLE PaperHasTable (
+#         paper_id STRING(36) NOT NULL,
+#         table_id STRING(36) NOT NULL
+#     ) PRIMARY KEY (paper_id, table_id)""",
+
+#     """CREATE TABLE PaperHasPage (
+#         paper_id STRING(36) NOT NULL,
+#         page_id STRING(64) NOT NULL
+#     ) PRIMARY KEY (paper_id, page_id)""",
+
+#     """CREATE TABLE PaperReportsOutcome (
+#         paper_id STRING(36) NOT NULL,
+#         outcome_id STRING(36) NOT NULL
+#     ) PRIMARY KEY (paper_id, outcome_id)
+#     """ ,
+
+#     """CREATE TABLE PaperMentionsGene (
+#         paper_id STRING(36) NOT NULL,
+#         gene_id STRING(36) NOT NULL
+#     ) PRIMARY KEY (paper_id, gene_id)
+#     """,
+
+#     """CREATE TABLE PageHasImage (
+#         page_id STRING(64) NOT NULL,
+#         image_id STRING(36) NOT NULL
+#     ) PRIMARY KEY (page_id, image_id)""",
+
+#     """CREATE TABLE PaperHasAuthor (
+#         paper_id STRING(36) NOT NULL,
+#         author_id STRING(36) NOT NULL
+#     ) PRIMARY KEY (paper_id, author_id)"""
+
+
+#     #Vector index
+#     """CREATE VECTOR INDEX idx_page_embedding
+#        ON Pages(text_embedding)
+#        OPTIONS(distance_type="COSINE");""",
+
+#     """CREATE VECTOR INDEX idx_image_embedding
+#        ON Images(image_embedding)
+#        OPTIONS(distance_type="COSINE");""",
+
+#     """CREATE VECTOR INDEX idx_caption_embedding
+#        ON Images(caption_embedding)
+#        OPTIONS(distance_type="COSINE");""",
+
+#     """CREATE VECTOR INDEX idx_table_embedding
+#        ON Tables(table_embedding)
+#        OPTIONS(distance_type="COSINE");""",
+    
+
+
+# ]
 
 def insert_initial_data(database):
     """Insert sample node and edge data."""
@@ -122,6 +230,11 @@ def insert_initial_data(database):
             values = [("paper_001", "Predicting Diabetes Progression with Deep Learning",
               "We applied LSTM to predict HbA1c levels in type 2 diabetes.",
               "2023-05-15", "Diabetes Journal")]
+        )
+        txn.insert(
+            "Pages",
+            ["page_id","paper_id","page_number","text"],
+            [("page_001","paper_001",1,"Introduction to diabetes prediction")]
         )
         txn.insert("Authors", ["author_id","name","affiliation"], [("author_001","Alice Chen","University X")])
         txn.insert("Methods", ["method_id","name","category"], [("method_lstm","LSTM","Deep Learning")])
@@ -138,7 +251,6 @@ def insert_initial_data(database):
         txn.insert("DrugTreatsDisease", ["drug_id","disease_id"], [("drug_metformin","disease_t2d")])
         txn.insert("AuthorWrotePaper", ["author_id","paper_id"], [("author_001","paper_001")])
         txn.insert("PaperCitesPaper", ["citing_paper_id", "cited_paper_id"], [("paper_001", "paper_002")])
-        txn.insert("PaperHasAuthor", ["paper_id", "author_id"], [("paper_001", "author_001")])
 
     print("Inserting node data...")
     database.run_in_transaction(insert_nodes)
@@ -151,12 +263,18 @@ def create_graph(database, graph_name):
     CREATE PROPERTY GRAPH {graph_name}
       NODE TABLES (
         Papers KEY (paper_id) LABEL Paper PROPERTIES (paper_id, title, abstract, publication_date, journal),
+        Pages KEY (page_id) LABEL Page PROPERTIES (page_id, paper_id, page_number, text),
         Authors KEY (author_id) LABEL Author PROPERTIES (author_id, name, affiliation),
         Methods KEY (method_id) LABEL Method PROPERTIES (method_id, name, category),
         Datasets KEY (dataset_id) LABEL Dataset PROPERTIES (dataset_id, name, description),
         Diseases KEY (disease_id) LABEL Disease PROPERTIES (disease_id, name, type),
         Biomarkers KEY (biomarker_id) LABEL Biomarker PROPERTIES (biomarker_id, name, unit),
-        Drugs KEY (drug_id) LABEL Drug PROPERTIES (drug_id, name, mechanism)
+        Drugs KEY (drug_id) LABEL Drug PROPERTIES (drug_id, name, mechanism),
+        Images KEY (image_id) LABEL Image PROPERTIES (image_id, paper_id, page_number, gcs_key, width, height, caption),
+        Tables KEY (table_id) LABEL Table PROPERTIES (table_id, paper_id, page_number, table_json),
+        Genes KEY (gene_id) LABEL Gene PROPERTIES (gene_id, name),
+        Outcomes KEY (outcome_id) LABEL Outcome PROPERTIES (outcome_id, name)
+
       )
       EDGE TABLES (
         PaperUsesMethod KEY (paper_id, method_id)
@@ -171,10 +289,6 @@ def create_graph(database, graph_name):
             SOURCE KEY (citing_paper_id) REFERENCES Papers
             DESTINATION KEY (cited_paper_id) REFERENCES Papers
             LABEL CITES_PAPER,
-        PaperHasAuthor KEY (paper_id, author_id)
-            SOURCE KEY (paper_id) REFERENCES Papers
-            DESTINATION KEY (author_id) REFERENCES Authors
-            LABEL HAS_AUTHOR,
         PaperUsesDataset KEY (paper_id, dataset_id)
             SOURCE KEY (paper_id) REFERENCES Papers
             DESTINATION KEY (dataset_id) REFERENCES Datasets
@@ -190,7 +304,34 @@ def create_graph(database, graph_name):
         AuthorWrotePaper KEY (author_id, paper_id)
             SOURCE KEY (author_id) REFERENCES Authors
             DESTINATION KEY (paper_id) REFERENCES Papers
-            LABEL WROTE
+            LABEL WROTE,
+        PaperHasImage KEY (paper_id, image_id)
+            SOURCE KEY (paper_id) REFERENCES Papers
+            DESTINATION KEY (image_id) REFERENCES Images
+            LABEL HAS_IMAGE,
+        PaperHasTable KEY (paper_id, table_id)
+            SOURCE KEY (paper_id) REFERENCES Papers
+            DESTINATION KEY (table_id) REFERENCES Tables
+            LABEL HAS_TABLE,
+        PaperHasPage KEY (paper_id, page_id)
+            SOURCE KEY (paper_id) REFERENCES Papers
+            DESTINATION KEY (page_id) REFERENCES Pages
+            LABEL HAS_PAGE,
+        PaperReportsOutcome KEY (paper_id, outcome_id)
+            SOURCE KEY (paper_id) REFERENCES Papers
+            DESTINATION KEY (outcome_id) REFERENCES Outcomes
+            LABEL REPORTS_OUTCOME,
+        PaperMentionsGene KEY (paper_id, gene_id)
+            SOURCE KEY (paper_id) REFERENCES Papers
+            DESTINATION KEY (gene_id) REFERENCES Genes
+            LABEL MENTIONS_GENE,
+        PageHasImage KEY (page_id, image_id)
+            SOURCE KEY (page_id) REFERENCES Pages
+            DESTINATION KEY (image_id) REFERENCES Images
+            LABEL HAS_IMAGE
+
+
+
       )
     """
     print(f"Creating {graph_name}...")
@@ -223,6 +364,54 @@ def create_instance_with_enterprise(client, project_id, instance_id, region):
     
     operation = instance_admin_client.create_instance(request=request)
     return operation
+
+def setup_database(client, project_id, instance_id, database_id, graph_name, region, force=False):
+        instance = client.instance(instance_id)
+
+        print("Checking instance exists...")
+        instance_exists = instance.exists()
+        print(f"Instance exists? {instance_exists}")
+
+        if not instance.exists():
+            print(f"Creating instance {instance_id}...")
+            operation = create_instance_with_enterprise(client, project_id, instance_id, region)
+            operation.result()
+            print("Instance created.")
+
+
+        database = instance.database(database_id)
+        print("Checking database exists...")
+        database_exists = database.exists()
+        if database_exists:
+            if force:
+                print(f"Deleting existing database {database_id} (--force)...")
+                operation = database.drop()
+                print("Database deleted. Waiting 5 seconds...")
+                time.sleep(5)
+            else:
+                print(f"Database {database_id} already exists. Use --force to recreate.")
+                return
+
+        print(f"Creating database {database_id}...")
+        print("Loading schema...")
+        statements = load_schema()
+        database = instance.database(database_id, ddl_statements=statements)
+        operation = database.create()
+        print("Waiting for database to be ready...")
+        operation.result()
+        print("Database created!")
+
+        # Insert data
+        print("Inserting node data...")
+        #database = instance.database(database_id)
+        insert_initial_data(database)
+        print("Node data inserted ✅")
+
+        print(f"Creating property graph {graph_name}...")
+        create_graph(database, graph_name)
+        return database
+
+    
 
 def print_config(project_id, instance_id, database_id, graph_name, region):
     print("\n" + "="*60)
@@ -274,53 +463,16 @@ def main():
 
     client = spanner.Client(project=project_id)
 
-    instance = client.instance(instance_id)
-    print("Checking instance exists...")
-    instance_exists = instance.exists()
-    print(f"Instance exists? {instance_exists}")
+    database = setup_database(
+        client,
+        project_id,
+        instance_id,
+        database_id,
+        graph_name,
+        region,
+        args.force
+    )
 
-    if instance_exists:
-        print(f"Instance {instance_id} already exists. Using existing instance.")
-    elif not args.skip_instance:
-        print(f"Creating instance {instance_id} with ENTERPRISE edition...")
-        operation = create_instance_with_enterprise(client, project_id, instance_id, region)
-        print("Waiting for instance creation (this may take a few minutes)...")
-        operation.result()
-        print("Instance created!")
-        # Refresh instance reference
-        instance = client.instance(instance_id)
-    else:
-        print("ERROR: Instance does not exist and --skip-instance was specified.")
-        return
-
-    database = instance.database(database_id)
-    print("Checking database exists...")
-    database_exists = database.exists()
-    if database_exists:
-        if args.force:
-            print(f"Deleting existing database {database_id} (--force)...")
-            operation = database.drop()
-            print("Database deleted. Waiting 5 seconds...")
-            time.sleep(5)
-        else:
-            print(f"Database {database_id} already exists. Use --force to recreate.")
-            return
-
-    print(f"Creating database {database_id}...")
-    database = instance.database(database_id, ddl_statements=DDL_STATEMENTS)
-    operation = database.create()
-    print("Waiting for database to be ready...")
-    operation.result()
-    print("Database created!")
-
-    # Insert data
-    print("Inserting node data...")
-    database = instance.database(database_id)
-    insert_initial_data(database)
-    print("Node data inserted ✅")
-
-    print(f"Creating property graph {graph_name}...")
-    create_graph(database, graph_name)
 
     print("\n" + "=" * 60)
     print("SUCCESS! Database setup complete.")
