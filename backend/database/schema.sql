@@ -6,7 +6,7 @@ CREATE TABLE Papers (
     title STRING(MAX),
     abstract STRING(MAX),
     url STRING(MAX),
-    text_embedding ARRAY<FLOAT32> OPTIONS (vector_length = 768)
+    text_embedding ARRAY<FLOAT32>
 ) PRIMARY KEY (paper_id);
 
 -- =========================
@@ -25,7 +25,7 @@ CREATE TABLE Pages (
     paper_id STRING(36),
     page_number INT64,
     text STRING(MAX),
-    page_embedding ARRAY<FLOAT32> OPTIONS (vector_length = 768)
+    page_embedding ARRAY<FLOAT32>
 ) PRIMARY KEY (page_id);
 
 -- =========================
@@ -37,8 +37,8 @@ CREATE TABLE Images (
     page_number INT64,
     path STRING(MAX),
     caption STRING(MAX),
-    image_embedding ARRAY<FLOAT32> OPTIONS (vector_length = 1408),
-    caption_embedding ARRAY<FLOAT32> OPTIONS (vector_length = 768)
+    image_embedding ARRAY<FLOAT32>,
+    caption_embedding ARRAY<FLOAT32>
 ) PRIMARY KEY (image_id);
 
 -- =========================
@@ -49,7 +49,7 @@ CREATE TABLE Tables (
     paper_id STRING(36),
     page_number INT64,
     table_data STRING(MAX),
-    table_embedding ARRAY<FLOAT32> OPTIONS (vector_length = 768)
+    table_embedding ARRAY<FLOAT32> 
 ) PRIMARY KEY (table_id);
 
 -- =========================
