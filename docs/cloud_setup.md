@@ -162,7 +162,6 @@ This command will:
 bash
 cd ~/search4cure-live/backend
 source .venv/bin/activate   # Linux / Cloud Shell
-cd ../scripts
 python ../scripts/setup_data.py --force
 ```
 

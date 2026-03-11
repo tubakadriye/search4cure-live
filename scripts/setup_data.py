@@ -282,6 +282,12 @@ def insert_initial_data(database):
             [("drug_metformin","Metformin")]
         )
 
+        txn.insert(
+            "Images",
+            ["image_id", "paper_id", "page_number", "gcs_key", "caption"],
+            [("image_001", "paper_001", 1, "gs://bucket/path/image.png", "Sample figure")]
+        )
+
     def insert_edges(txn):
         txn.insert("PaperUsesMethod", ["paper_id","method_id"], [("paper_001","method_lstm")])
         txn.insert("PaperStudiesDisease", ["paper_id","disease_id"], [("paper_001","disease_t2d")])
@@ -289,7 +295,9 @@ def insert_initial_data(database):
         txn.insert("PaperMentionsBiomarker", ["paper_id","biomarker_id"], [("paper_001","biomarker_hba1c")])
         txn.insert("DrugTreatsDisease", ["drug_id","disease_id"], [("drug_metformin","disease_t2d")])
         txn.insert("PaperHasAuthor", ["paper_id","author_id"], [("paper_001","author_001")])
-        txn.insert("PaperCitesPaper", ["citing_paper_id", "cited_paper_id"], [("paper_001")])
+        txn.insert("PaperCitesPaper",["citing_paper_id", "cited_paper_id"],[("paper_001", "paper_001")])  # Example: citing itself for demo)
+        txn.insert("PageHasImage",["page_id", "image_id"],[("page_001", "image_001")] ) # match your sample image
+
 
     print("Inserting node data...")
     database.run_in_transaction(insert_nodes)
