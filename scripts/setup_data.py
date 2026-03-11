@@ -288,7 +288,7 @@ def insert_initial_data(database):
         txn.insert("PaperUsesDataset", ["paper_id","dataset_id"], [("paper_001","dataset_ukb")])
         txn.insert("PaperMentionsBiomarker", ["paper_id","biomarker_id"], [("paper_001","biomarker_hba1c")])
         txn.insert("DrugTreatsDisease", ["drug_id","disease_id"], [("drug_metformin","disease_t2d")])
-        txn.insert("AuthorWrotePaper", ["author_id","paper_id"], [("author_001","paper_001")])
+        txn.insert("PaperHasAuthor", ["paper_id","author_id"], [("paper_001","author_001")])
         txn.insert("PaperCitesPaper", ["citing_paper_id", "cited_paper_id"], [("paper_001", "paper_002")])
 
     print("Inserting node data...")
@@ -339,10 +339,10 @@ def create_graph(database, graph_name):
             SOURCE KEY (drug_id) REFERENCES Drugs
             DESTINATION KEY (disease_id) REFERENCES Diseases
             LABEL TREATS,
-        AuthorWrotePaper KEY (author_id, paper_id)
-            SOURCE KEY (author_id) REFERENCES Authors
-            DESTINATION KEY (paper_id) REFERENCES Papers
-            LABEL WROTE,
+        PaperHasAuthor KEY (paper_id, author_id)
+            SOURCE KEY (paper_id) REFERENCES Papers
+            DESTINATION KEY (author_id) REFERENCES Authors
+            LABEL HAS_AUTHOR,
         PaperHasImage KEY (paper_id, image_id)
             SOURCE KEY (paper_id) REFERENCES Papers
             DESTINATION KEY (image_id) REFERENCES Images
