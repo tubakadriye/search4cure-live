@@ -15,6 +15,7 @@ import time
 import os
 from dotenv import load_dotenv
 
+
 load_dotenv()
 
 # Config
@@ -24,7 +25,7 @@ DATABASE_ID = os.getenv("DATABASE_ID")
 GRAPH_NAME = os.getenv("GRAPH_NAME", "DiabetesGraph")
 REGION = os.getenv("REGION", "us-central1")
 
-SCHEMA_FILE = "backend/database/schema.sql"
+SCHEMA_FILE = "../backend/database/schema.sql"
 
 
 def load_schema():
