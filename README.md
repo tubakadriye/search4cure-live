@@ -21,7 +21,40 @@ It enables:
 ---
 
 ## Architecture Diagram
-"""mermaid
+"""Mermaid
+flowchart TD
+
+A[arXiv Papers] --> B[Download PDFs]
+
+B --> C[PDF Processing]
+
+C --> D1[Page Extraction]
+C --> D2[Image Extraction]
+C --> D3[Table Extraction]
+C --> D4[Entity Extraction - Gemini]
+
+D1 --> E[Generate Text Embeddings]
+D2 --> F[Generate Image Embeddings]
+D3 --> G[Generate Table Embeddings]
+
+E --> H[Cloud Spanner Property Graph]
+F --> H
+G --> H
+D4 --> H
+
+H --> I[Hybrid Retrieval Engine]
+
+I --> J1[Vector Search]
+I --> J2[Graph Traversal]
+I --> J3[Multimodal Search]
+
+J1 --> K[Research Assistant]
+J2 --> K
+J3 --> K
+"""
+
+## Data Processing Pipeline
+""" Mermaid
 flowchart TD
 
 A[arXiv] --> B[download_pdfs()]
@@ -42,6 +75,122 @@ I --> J
 
 J --> K[insert_into_spanner()]
 """
+
+## Knowledge Graph Schema
+
+"""Mermaid
+graph TD
+
+Paper -->|USES_METHOD| Method
+Paper -->|USES_DATASET| Dataset
+Paper -->|STUDIES_DISEASE| Disease
+Paper -->|MENTIONS_BIOMARKER| Biomarker
+Paper -->|HAS_IMAGE| Image
+Paper -->|HAS_TABLE| Table
+Paper -->|HAS_AUTHOR| Author
+
+Drug -->|TREATS| Disease
+Author -->|WROTE| Paper
+Paper -->|CITES| Paper
+"""
+
+## Multimodal Document Structure
+
+""" Mermaid
+graph TD
+
+Paper --> Page
+
+Page --> TextChunk
+Page --> Image
+Page --> Table
+
+Image --> ImageEmbedding
+TextChunk --> TextEmbedding
+Table --> TableEmbedding
+"""
+
+## Retrieval Architecture
+
+""" Mermaid
+flowchart TD
+
+UserQuery --> Q1[Semantic Search]
+UserQuery --> Q2[Image Search]
+UserQuery --> Q3[Entity Query]
+
+Q1 --> V[Vector Search - Text Embeddings]
+Q2 --> I[Vector Search - Image Embeddings]
+Q3 --> G[Graph Traversal]
+
+V --> R[Results]
+I --> R
+G --> R
+
+R --> AI[AI Research Assistant]
+"""
+
+## System Deployment Architecture
+
+"""Mermaid
+flowchart TD
+
+User --> UI[Streamlit / Frontend]
+
+UI --> API[Cloud Run API]
+
+API --> Agent[Agent Orchestrator]
+
+Agent --> Spanner[(Cloud Spanner Graph)]
+Agent --> VertexAI[Vertex AI - Gemini]
+
+Spanner --> Embeddings[Vector Embeddings]
+Spanner --> Graph[Knowledge Graph]
+
+VertexAI --> Response
+
+Embeddings --> Response
+Graph --> Response
+
+Response --> User
+"""
+
+## Research Query Reasoning
+
+```mermaid
+graph TD
+
+UserQuestion --> Paper
+
+Paper --> Method
+Paper --> Dataset
+Paper --> Disease
+
+Disease --> Biomarker
+Drug --> Disease
+
+Method --> Prediction
+```
+
+| Component       | Purpose                    |
+| --------------- | -------------------------- |
+| arXiv ingestion | Collect research papers    |
+| PDF processing  | Extract multimodal content |
+| Embeddings      | Enable semantic search     |
+| Spanner Graph   | Store relationships        |
+| Vector Search   | Retrieve relevant content  |
+| Graph Traversal | Multi-hop reasoning        |
+
+Example query reasoning:
+
+Which papers predict diabetes progression?
+
+Paper
+ → Method (LSTM)
+ → Dataset (UK Biobank)
+ → Disease (Type 2 Diabetes)
+
+
 # System Architecture
 
 arXiv Papers

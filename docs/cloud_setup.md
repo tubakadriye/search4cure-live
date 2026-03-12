@@ -172,5 +172,20 @@ cd ~/search4cure-live/backend
 uv run python ../scripts/setup_data.py
 ```
 
+The output will be:
+
+Graph DiabetesResearchGraph created ✅
+
+============================================================
+SUCCESS! Database setup complete.
+============================================================
+
+Instance:  diabetes-research-network
+Database:  research-graph-db
+Graph:     DiabetesResearchGraph
+
+Access your database at:
+https://console.cloud.google.com/spanner/instances/diabetes-research-network/databases/research-graph-db?project=search4cure-diabetes
+
 **Tip:** Always run from inside .venv or using uv run to ensure dependencies (like python-dotenv) are correctly loaded.
 
