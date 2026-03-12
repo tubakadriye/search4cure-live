@@ -205,32 +205,36 @@ CREATE TABLE PaperReportsOutcome (
 -- =========================
 
 CREATE VECTOR INDEX idx_paper_embedding
+USING SCANN
 ON Papers(text_embedding)
 OPTIONS(
-  distance_type="COSINE",
-  vector_length=768
+  distance_measure = COSINE
 );
 
 CREATE VECTOR INDEX idx_page_embedding
+USING SCANN
 ON Pages(text_embedding)
 OPTIONS(
-  distance_type="COSINE",
-  vector_length=768);
+  distance_measure = COSINE
+);
 
 CREATE VECTOR INDEX idx_image_embedding
+USING SCANN
 ON Images(image_embedding)
 OPTIONS(
-  distance_type="COSINE",
-  vector_length=1408);
+  distance_measure = COSINE
+);
 
 CREATE VECTOR INDEX idx_caption_embedding
+USING SCANN
 ON Images(caption_embedding)
 OPTIONS(
-  distance_type="COSINE",
-  vector_length=768);
+  distance_measure = COSINE
+);
 
 CREATE VECTOR INDEX idx_table_embedding
+USING SCANN
 ON Tables(table_embedding)
 OPTIONS(
-  distance_type="COSINE",
-  vector_length=768);
+  distance_measure = COSINE
+);

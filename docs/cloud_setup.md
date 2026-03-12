@@ -12,7 +12,9 @@ gcloud config set project search4cure-diabetes --quiet
 ```
 
 
+
 ### 2. Enable required services
+One time only.
 ```bash
 gcloud services enable \
   compute.googleapis.com \
