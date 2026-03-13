@@ -1,17 +1,17 @@
-from ingestion.arxiv_loader import ArxivPDFLoader
-from ingestion.page_extractor import extract_pages
-from ingestion.image_extractor import extract_images
-from ingestion.table_extractor import extract_tables_from_pdf
-from ingestion.entity_extractor import extract_entities_with_llm
-from ingestion.caption_extractor import extract_captions
+from backend.ingestion.arxiv_loader import ArxivPDFLoader
+from backend.ingestion.page_extractor import extract_pages
+from backend.ingestion.image_extractor import extract_images
+from backend.ingestion.table_extractor import extract_tables_from_pdf
+from backend.ingestion.entity_extractor import extract_entities_with_llm
+from backend.ingestion.caption_extractor import extract_captions
 
-from embeddings.image_with_caption_processor import process_image_with_caption
+from backend.embeddings.image_with_caption_processor import process_image_with_caption
 
-from graph.node_builder import build_nodes, build_image_nodes, build_page_nodes, build_table_nodes
-from graph.edge_builder import build_edges
+from backend.graph.node_builder import build_nodes, build_image_nodes, build_page_nodes, build_table_nodes
+from backend.graph.edge_builder import build_edges
 
-from database.spanner_writer import insert_nodes, insert_edges
-from database.spanner_client import get_database
+from backend.database.spanner_writer import insert_nodes, insert_edges
+from backend.database.spanner_client import get_database
 
 
 def run_pipeline():

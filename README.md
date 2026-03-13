@@ -563,6 +563,14 @@ export INSTANCE_ID=diabetes-research-network
 export DATABASE_ID=research-graph-db
 export REGION=us-central1
 
+
+## Run Ingestion Pipeline
+
+👉 [Ingestion Pipeline](docs/ingestion-pipeline.md)
+
+
+
+
 ## License
 
 MIT License
