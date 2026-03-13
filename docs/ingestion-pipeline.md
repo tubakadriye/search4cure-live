@@ -27,11 +27,17 @@ Force install missing LangChain package:
 uv add langchain-community
 
 
+
+
 Run ingestion:
+
+uv run python -m backend.pipeline.run_full_ingestion
+or 
+
+source .venv/bin/activate
 
 python -m backend.pipeline.run_full_ingestion
 
-or with uv (your comment suggests you use it):
 
-uv run python backend/pipeline/run_full_ingestion.py
+
 

@@ -1,5 +1,5 @@
 import fitz
-from embeddings.text_embeddings import get_text_embedding
+from backend.embeddings.text_embeddings import get_text_embedding
 
 def extract_pages(pdf, paper_id):
 
