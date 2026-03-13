@@ -4,9 +4,10 @@ import os
 import uuid
 from PIL import Image
 from utils.gcs_utils import upload_bytes_to_gcs
+from embeddings.image_with_caption_processor import process_image_with_caption
 
 
-def extract_images(pdf):
+def extract_images(pdf, paper_id):
     os.makedirs("data/images", exist_ok=True)
 
     images = []   
@@ -42,7 +43,9 @@ def extract_images(pdf):
 
             images.append({
                 "image_id": image_id,
+                "paper_id": paper_id,
                 "page_number": page_index + 1,
+                "page_id": f"{paper_id}_page_{page_index+1}",
                 "path": path,
                 "gcs_key": gcs_key,
                 "width": base["width"],

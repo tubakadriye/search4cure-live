@@ -27,23 +27,29 @@ def run_pipeline():
 
     database = get_database()
 
+    all_nodes = []
+    all_edges = []
+
     for paper in papers:
         print("Processing:", paper["title"])
 
         pdf = paper["pdf"]
+        paper_id = paper["arxiv_id"]
 
         # -------- PAGE EXTRACTION --------
         print("Extracting pages")
-        pages = extract_pages(pdf,  paper["arxiv_id"])
+        pages = extract_pages(pdf,  paper_id)
         full_text = " ".join([p["text"] for p in pages])
 
         # -------- ENTITY EXTRACTION --------
-        print("Extracting entities with LLM...")
+        print("Extracting entities")
         entities = extract_entities_with_llm(full_text)
 
         # -------- IMAGE EXTRACTION --------
         print("Extracting images...")
-        images = extract_images(pdf)
+        images = extract_images(pdf, paper_id)
+
+        
 
         # -------- CAPTION EXTRACTION --------
         print("Extracting captions")
@@ -60,9 +66,9 @@ def run_pipeline():
         print("Image and caption embeddings...")
 
         for img in images:
-            page_caps = page_caption_map.get(img["page_number"], [])
+            captions = page_caption_map.get(img["page_number"], [])
 
-            caption = page_caps[0] if page_caps else ""
+            caption = captions[0] if captions else ""
 
             embeddings = process_image_with_caption(img["path"], caption)
 
@@ -76,25 +82,39 @@ def run_pipeline():
 
         # -------- GRAPH BUILDING --------
         print("Building graph structure...")
-        nodes = build_nodes(paper, entities, full_text)
-        edges = build_edges(paper, pages, entities, images, tables)
 
         page_nodes = build_page_nodes(pages)
-        image_nodes = build_image_nodes(paper["arxiv_id"], images)
-        table_nodes = build_table_nodes(paper["arxiv_id"], tables)
+        image_nodes = build_image_nodes(paper_id, images)
+        table_nodes = build_table_nodes(paper_id, tables)
+
+        nodes = build_nodes(paper, entities, full_text)
+
+        edges = build_edges(paper, pages, entities, images, tables)
 
         # -------- INSERT INTO SPANNER --------
         print("Inserting into Spanner...")
-        insert_nodes(database, nodes)
-        insert_nodes(database, page_nodes)
-        insert_nodes(database, image_nodes)
-        insert_nodes(database, table_nodes)
+
+        all_nodes.extend(nodes)
+        all_nodes.extend(page_nodes)
+        all_nodes.extend(image_nodes)
+        all_nodes.extend(table_nodes)
+
+        all_edges.extend(edges)
+
+        # insert_nodes(database, nodes)
+        # insert_nodes(database, page_nodes)
+        # insert_nodes(database, image_nodes)
+        # insert_nodes(database, table_nodes)
         
 
-        insert_edges(database, edges)
+        #insert_edges(database, edges)
 
         print("Processed:", paper["title"])
+    
+    print("Writing batched data to Spanner...")
 
+    insert_nodes(database, all_nodes)
+    insert_edges(database, all_edges)
 
     print("Pipeline completed successfully!")
 

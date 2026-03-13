@@ -57,10 +57,11 @@ J3 --> K
 
 ![Data Processing Pipeline](./docs/Data%20Processing%20Pipeline.png)
 
-<!-- ```mermaid
+
+mermaid
 flowchart TD
 
-A[arXiv] --> B[download_pdfs()]
+A[arXiv] B[download_pdfs()]
 B --> C[extract_pages()]
 C --> D[extract_images()]
 C --> E[extract_tables()]
@@ -77,7 +78,22 @@ H --> J
 I --> J
 
 J --> K[insert_into_spanner()]
-``` -->
+
+
+arXiv ingestion
+        │
+PDF parsing
+        │
+Entities (Gemini)
+        │
+Multimodal embeddings (Vertex AI)
+        │
+Graph + vectors
+        │
+Spanner
+        │
+Multimodal RAG
+ 
 
 ## Knowledge Graph Schema
 
@@ -417,6 +433,135 @@ See how to explore the graph in Spanner Studio:
 
 👉 [Graph Visualization Guide](docs/graph-visualization.md)
 
+
+With ~300 papers your pipeline will still run without it, but batching will make it much faster, cheaper, and safer with APIs and Google Cloud Spanner.
+
+I'll break it down clearly for your current pipeline.
+
+1️⃣ Where batching is actually needed
+
+You have 3 heavy operations:
+
+1. Text embeddings
+
+You call get_text_embedding():
+
+for full paper
+
+for every page
+
+for every caption
+
+for tables
+
+That means thousands of embedding calls.
+
+But Vertex AI text-embedding-004 supports batch input.
+
+Example:
+
+model.get_embeddings(["text1","text2","text3"])
+
+Instead of:
+
+call
+call
+call
+call
+2. Spanner writes
+
+Right now you do:
+
+insert_nodes(database, nodes)
+insert_nodes(database, page_nodes)
+insert_nodes(database, image_nodes)
+insert_nodes(database, table_nodes)
+
+for every paper.
+
+For 300 papers this becomes 1200 transactions.
+
+Cloud Spanner performs much better with batch mutations.
+
+3. Image embeddings
+
+Each image call:
+
+get_image_embedding(image)
+
+calls the multimodal model.
+
+If a paper has 20 figures, that is 20 API calls.
+
+Batching images also improves throughput.
+
+2️⃣ Where batching is NOT necessary
+
+These parts are fine as they are:
+
+PDF parsing
+extract_pages
+extract_images
+extract_tables
+
+These are CPU-bound.
+
+Batching won't help.
+
+Entity extraction
+extract_entities_with_llm(full_text)
+
+You want one LLM call per paper, so batching doesn't apply.
+
+3️⃣ Biggest performance bottleneck in your pipeline
+
+Right now the slowest parts will be:
+
+1️⃣ embedding generation
+2️⃣ Spanner insert transactions
+
+Not the PDF parsing.
+
+4️⃣ Minimal batching change (best approach)
+
+The simplest improvement:
+
+Accumulate all nodes and edges first
+
+Instead of inserting per paper.
+
+Change:
+
+for paper in papers:
+   process
+   insert
+
+to:
+
+all_nodes = []
+all_edges = []
+
+for paper in papers:
+    ...
+    all_nodes.extend(nodes)
+    all_nodes.extend(page_nodes)
+    all_nodes.extend(image_nodes)
+    all_nodes.extend(table_nodes)
+
+    all_edges.extend(edges)
+
+insert_nodes(database, all_nodes)
+insert_edges(database, all_edges)
+
+This will reduce thousands of transactions to a few dozen.
+
+Much better for Google Cloud Spanner.
+
+
+export PROJECT_ID=search4cure-diabetes
+export INSTANCE_ID=diabetes-research-network
+export DATABASE_ID=research-graph-db
+export REGION=us-central1
 
 ## License
 

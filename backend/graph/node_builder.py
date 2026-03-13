@@ -2,6 +2,7 @@ from utils.gcs_utils import upload_table_to_gcs
 from embeddings.table_embeddings import embed_table
 import json
 from embeddings.text_embeddings import get_text_embedding
+from google.cloud import spanner
 
 
 def build_nodes(paper, entities, full_text):
@@ -19,7 +20,8 @@ def build_nodes(paper, entities, full_text):
         "paper_id": paper["arxiv_id"],
         "title": paper["title"],
         "abstract": full_text[:2000],
-        "text_embedding": text_embedding
+        "text_embedding": text_embedding,
+        "created_at": spanner.COMMIT_TIMESTAMP
     })
 
     # -------------------------
@@ -30,7 +32,8 @@ def build_nodes(paper, entities, full_text):
         nodes.append({
             "table": "Authors",
             "author_id": a.lower().replace(" ", "_"),
-            "name": a
+            "name": a,
+            "created_at": spanner.COMMIT_TIMESTAMP
         })
 
 
@@ -42,7 +45,8 @@ def build_nodes(paper, entities, full_text):
         nodes.append({
             "table": "Methods",
             "method_id": m.lower().replace(" ", "_"),
-            "name": m
+            "name": m,
+            "created_at": spanner.COMMIT_TIMESTAMP
         })
 
     # -------------------------
@@ -53,7 +57,8 @@ def build_nodes(paper, entities, full_text):
         nodes.append({
             "table": "Diseases",
             "disease_id": d.lower().replace(" ", "_"),
-            "name": d
+            "name": d,
+            "created_at": spanner.COMMIT_TIMESTAMP
         })
 
     # -------------------------
@@ -64,7 +69,8 @@ def build_nodes(paper, entities, full_text):
         nodes.append({
             "table": "Datasets",
             "dataset_id": ds.lower().replace(" ", "_"),
-            "name": ds
+            "name": ds,
+            "created_at": spanner.COMMIT_TIMESTAMP
         })
 
     
@@ -76,7 +82,8 @@ def build_nodes(paper, entities, full_text):
         nodes.append({
             "table": "Biomarkers",
             "biomarker_id": b.lower().replace(" ", "_"),
-            "name": b
+            "name": b,
+            "created_at": spanner.COMMIT_TIMESTAMP
         })
 
     # -------------------------
@@ -87,7 +94,8 @@ def build_nodes(paper, entities, full_text):
         nodes.append({
             "table": "Drugs",
             "drug_id": drug.lower().replace(" ", "_"),
-            "name": drug
+            "name": drug,
+            "created_at": spanner.COMMIT_TIMESTAMP
         })
 
     # -------------------------
@@ -98,7 +106,8 @@ def build_nodes(paper, entities, full_text):
         nodes.append({
             "table": "Genes",
             "gene_id": g.lower().replace(" ", "_"),
-            "name": g
+            "name": g,
+            "created_at": spanner.COMMIT_TIMESTAMP
         })
 
 
@@ -110,7 +119,8 @@ def build_nodes(paper, entities, full_text):
         nodes.append({
             "table": "Outcomes",
             "outcome_id": o.lower().replace(" ", "_"),
-            "name": o
+            "name": o,
+            "created_at": spanner.COMMIT_TIMESTAMP
         })
 
 
@@ -133,7 +143,8 @@ def build_table_nodes(paper_id, tables):
             "paper_id": paper_id,
             "page_number": t["page_number"],
             "table_json": gcs_key,
-            "table_embedding": embed_table(t["dataframe"])
+            "table_embedding": embed_table(t["dataframe"]),
+            "created_at": spanner.COMMIT_TIMESTAMP
         })
 
     return nodes
@@ -155,7 +166,8 @@ def build_image_nodes(paper_id, images):
             "height": img["height"],
             "caption": img.get("caption"),
             "image_embedding": img.get("image_embedding"),
-            "caption_embedding": img.get("caption_embedding")
+            "caption_embedding": img.get("caption_embedding"),
+            "created_at": spanner.COMMIT_TIMESTAMP
         })
 
     return nodes
@@ -172,7 +184,8 @@ def build_page_nodes(pages):
             "paper_id": p["paper_id"],
             "page_number": p["page_number"],
             "text": p["text"],
-            "text_embedding": p["text_embedding"]
+            "text_embedding": p["text_embedding"],
+            "created_at": spanner.COMMIT_TIMESTAMP
         })
 
     return nodes

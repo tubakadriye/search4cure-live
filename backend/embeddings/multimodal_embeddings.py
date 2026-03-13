@@ -1,13 +1,13 @@
 from typing import List, Union
 from PIL import Image
 import vertexai
-from vertexai.vision_models import MultiModalEmbeddingModel
+from vertexai.preview.vision_models import MultiModalEmbeddingModel
 import tempfile
 import os
 
 
 # Initialize Vertex AI
-PROJECT_ID = os.getenv("PROJECT_ID")
+PROJECT_ID = os.getenv("PROJECT_ID", "search4cure-diabetes")
 REGION = os.getenv("REGION", "us-central1")
 
 vertexai.init(project=PROJECT_ID, location=REGION)
@@ -64,3 +64,14 @@ def get_multimodal_embedding(data: Union[Image.Image, str]) -> List[float]:
 
         print(f"[!] Vertex embedding failed: {e}")
         return []
+    
+
+def get_image_embedding(image_path):
+
+    embeddings = model.get_embeddings(
+        image=image_path
+    )
+
+    return embeddings.image_embedding
+
+
