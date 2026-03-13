@@ -179,7 +179,7 @@ uv run python ../scripts/setup_data.py
 
 The output will be:
 
-![Output](docs/graph_created_output.png)
+![Output](graph_created_output.png)
 
 **Tip:** Always run from inside .venv or using uv run to ensure dependencies (like python-dotenv) are correctly loaded.
 
