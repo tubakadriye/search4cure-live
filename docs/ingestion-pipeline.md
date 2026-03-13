@@ -1,5 +1,11 @@
-Run it from the project root (search4cure-live), not from backend.
 
+
+### 1. Set the project
+```bash
+gcloud config set project search4cure-diabetes --quiet 
+```
+
+Run it from the project root (search4cure-live), 
 Go one level up
 cd ~/search4cure-live
 
