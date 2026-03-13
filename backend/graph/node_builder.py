@@ -1,7 +1,7 @@
-from utils.gcs_utils import upload_table_to_gcs
-from embeddings.table_embeddings import embed_table
-import json
-from embeddings.text_embeddings import get_text_embedding
+from backend.utils.gcs_utils import upload_table_to_gcs
+from backend.embeddings.table_embeddings import embed_table
+#import json
+from backend.embeddings.text_embeddings import get_text_embedding
 from google.cloud import spanner
 
 
