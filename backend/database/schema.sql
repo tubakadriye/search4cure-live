@@ -6,7 +6,7 @@ CREATE TABLE Papers (
     title STRING(MAX),
     abstract STRING(MAX),
     url STRING(MAX),
-    text_embedding ARRAY<FLOAT32>,
+    text_embedding ARRAY<FLOAT32>(vector_length=>768),
     created_at TIMESTAMP OPTIONS (allow_commit_timestamp=true)
 
 ) PRIMARY KEY (paper_id);
@@ -28,7 +28,7 @@ CREATE TABLE Pages (
     paper_id STRING(36),
     page_number INT64,
     text STRING(MAX),
-    text_embedding ARRAY<FLOAT32>,
+    text_embedding ARRAY<FLOAT32>(vector_length=>768),
     created_at TIMESTAMP OPTIONS (allow_commit_timestamp=true)
 ) PRIMARY KEY (page_id);
 
@@ -43,8 +43,8 @@ CREATE TABLE Images (
     width INT64,
     height INT64,
     caption STRING(MAX),
-    image_embedding ARRAY<FLOAT32>,
-    caption_embedding ARRAY<FLOAT32>,
+    image_embedding ARRAY<FLOAT32>(vector_length=>1408),
+    caption_embedding ARRAY<FLOAT32>(vector_length=>768),
     created_at TIMESTAMP OPTIONS (allow_commit_timestamp=true)
 ) PRIMARY KEY (image_id);
 
@@ -56,7 +56,7 @@ CREATE TABLE Tables (
     paper_id STRING(36),
     page_number INT64,
     table_json STRING(MAX),
-    table_embedding ARRAY<FLOAT32>,
+    table_embedding ARRAY<FLOAT32>(vector_length=>768),
     created_at TIMESTAMP OPTIONS (allow_commit_timestamp=true)
 ) PRIMARY KEY (table_id);
 
