@@ -1,4 +1,4 @@
-from embeddings.text_embeddings import get_text_embedding
+from backend.embeddings.text_embeddings import get_text_embedding
 import pandas as pd
 
 def embed_table(table_df: pd.DataFrame):
