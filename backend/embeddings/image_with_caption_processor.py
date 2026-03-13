@@ -1,6 +1,6 @@
-from embeddings.image_embeddings import get_clip_embedding
-from embeddings.text_embeddings import get_text_embedding
-from embeddings.multimodal_embeddings import get_image_embedding
+#from embeddings.image_embeddings import get_clip_embedding
+from backend.embeddings.text_embeddings import get_text_embedding
+from backend.embeddings.multimodal_embeddings import get_image_embedding
 
 
 # def process_image_with_caption(image_path, caption):
