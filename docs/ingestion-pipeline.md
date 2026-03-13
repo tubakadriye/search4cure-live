@@ -50,3 +50,50 @@ no Ghostscript
 works better with research PDFs
 
 fewer dependencies
+
+
+1️⃣ Set your project
+
+Replace with your project ID if different.
+
+gcloud config set project search4cure-diabetes
+
+2️⃣ Authenticate your user
+gcloud auth application-default login
+
+
+This will open a browser → approve.
+
+3️⃣ Set the ADC environment variable
+export GOOGLE_APPLICATION_CREDENTIALS=$HOME/.config/gcloud/application_default_credentials.json
+
+4️⃣ Set Vertex AI region
+
+Your code likely needs a region like us-central1.
+
+export GOOGLE_CLOUD_PROJECT=search4cure-diabetes
+export GOOGLE_CLOUD_LOCATION=us-central1
+
+5️⃣ Test Vertex AI quickly
+
+Run this test:
+
+python - <<EOF
+from vertexai.language_models import TextEmbeddingModel
+import vertexai
+
+vertexai.init(project="search4cure-diabetes", location="us-central1")
+model = TextEmbeddingModel.from_pretrained("text-embedding-004")
+print("Vertex AI works")
+EOF
+
+
+If you see:
+
+Vertex AI works
+
+
+then your ingestion pipeline will run.
+
+Then run your pipeline again
+uv run python -m backend.pipeline.run_full_ingestion

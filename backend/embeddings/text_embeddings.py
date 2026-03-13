@@ -1,4 +1,11 @@
 from vertexai.language_models import TextEmbeddingModel
+import vertexai
+import os
+
+vertexai.init(
+    project=os.getenv("GOOGLE_CLOUD_PROJECT"),
+    location=os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1"),
+)
 
 model = TextEmbeddingModel.from_pretrained("text-embedding-004")
 
