@@ -41,3 +41,12 @@ python -m backend.pipeline.run_full_ingestion
 
 
 
+Advantages:
+
+10× faster
+
+no Ghostscript
+
+works better with research PDFs
+
+fewer dependencies

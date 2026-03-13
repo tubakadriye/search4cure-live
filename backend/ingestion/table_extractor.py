@@ -1,28 +1,49 @@
 #import fitz  # PyMuPDF
-import camelot
+#import camelot
 #from io import BytesIO
 #from PIL import Image
 
 def extract_tables_from_pdf(pdf):
-    """
-    Extract tables from PDF pages. Returns a list of dicts with page_number, table_data, and optionally CSV bytes.
-    """
-    temp_path = "/tmp/temp_paper.pdf"
-    pdf.save(temp_path)
 
-    tables = camelot.read_pdf(temp_path, pages="all")
+    tables = []
 
-    results = []
+    for page_index, page in enumerate(pdf):
+        try:
+            page_tables = page.find_tables()
 
-    for i, table in enumerate(tables):
+            for i, table in enumerate(page_tables.tables):
+                tables.append({
+                    "page_number": page_index + 1,
+                    "table_index": i,
+                    "dataframe": table.to_pandas()
+                })
 
-        results.append({
-            "page_number": table.page,
-            "table_index": i,
-            "dataframe": table.df
-        })
+        except Exception:
+            pass
 
-    return results
+    return tables
+
+
+# def extract_tables_from_pdf(pdf):
+#     """
+#     Extract tables from PDF pages. Returns a list of dicts with page_number, table_data, and optionally CSV bytes.
+#     """
+#     temp_path = "/tmp/temp_paper.pdf"
+#     pdf.save(temp_path)
+
+#     tables = camelot.read_pdf(temp_path, pages="all")
+
+#     results = []
+
+#     for i, table in enumerate(tables):
+
+#         results.append({
+#             "page_number": table.page,
+#             "table_index": i,
+#             "dataframe": table.df
+#         })
+
+#     return results
 
     # for page_index in range(len(pdf)):
     #     page = pdf[page_index]
