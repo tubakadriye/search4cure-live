@@ -167,6 +167,9 @@ source .venv/bin/activate   # Linux / Cloud Shell
 python ../scripts/setup_data.py --force
 ```
 
+[output](../data/images/graph_created_output.png)
+
+
 **Option 2 — Use uv run (auto-uses .venv):**
 
 ```
