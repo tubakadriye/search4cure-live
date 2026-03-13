@@ -12,32 +12,31 @@ from backend.graph.edge_builder import build_edges
 
 from backend.database.spanner_writer import insert_nodes, insert_edges
 from backend.database.spanner_client import get_database
+from tqdm import tqdm
 
 
 def run_pipeline():
-
-    print("Downloading papers from arXiv...")
+    print("Initializing Arxiv PDF loader...")
 
     loader = ArxivPDFLoader(
         query="diabetes",
         max_docs=300
     )
 
-    papers = loader.download_pdfs()
+    #papers = loader.download_pdfs()
 
     database = get_database()
 
-    all_nodes = []
-    all_edges = []
+    total_nodes, total_edges = [], []
 
-    for paper in papers:
-        print("Processing:", paper["title"])
-
+    print("Streaming papers from arXiv...")
+    for paper in tqdm(loader.stream_pdfs(), desc="Papers", unit="paper"):
         pdf = paper["pdf"]
         paper_id = paper["arxiv_id"]
+        print(f"\nProcessing paper: {paper['title']} ({paper_id})")
 
         # -------- PAGE EXTRACTION --------
-        print("Extracting pages")
+        print("Extracting pages...")
         pages = extract_pages(pdf,  paper_id)
         full_text = " ".join([p["text"] for p in pages])
 
@@ -49,29 +48,19 @@ def run_pipeline():
         print("Extracting images...")
         images = extract_images(pdf, paper_id)
 
-        
-
         # -------- CAPTION EXTRACTION --------
-        print("Extracting captions")
+        print("Extracting captions per page...")
         page_caption_map = {}
-
         for page in pages:
-
             captions = extract_captions(page["text"])
-
             page_caption_map[page["page_number"]] = captions
 
-
         # -------- IMAGE + CAPTION EMBEDDINGS --------
-        print("Image and caption embeddings...")
-
+        print("Processing image + caption embeddings...")
         for img in images:
             captions = page_caption_map.get(img["page_number"], [])
-
             caption = captions[0] if captions else ""
-
-            embeddings = process_image_with_caption(img["path"], caption)
-
+            embeddings = process_image_with_caption(img["gcs_key"], caption)
             img["caption"] = caption
             img["image_embedding"] = embeddings["image_embedding"]
             img["caption_embedding"] = embeddings["caption_embedding"]
@@ -88,18 +77,24 @@ def run_pipeline():
         table_nodes = build_table_nodes(paper_id, tables)
 
         nodes = build_nodes(paper, entities, full_text)
-
         edges = build_edges(paper, pages, entities, images, tables)
 
         # -------- INSERT INTO SPANNER --------
-        print("Inserting into Spanner...")
+        print("Inserting nodes and edges into Spanner...")
+        insert_nodes(database, nodes + page_nodes + image_nodes + table_nodes)
+        insert_edges(database, edges)
 
-        all_nodes.extend(nodes)
-        all_nodes.extend(page_nodes)
-        all_nodes.extend(image_nodes)
-        all_nodes.extend(table_nodes)
+        total_nodes.extend(nodes + page_nodes + image_nodes + table_nodes)
+        total_edges.extend(edges)
 
-        all_edges.extend(edges)
+        # all_nodes.extend(nodes)
+        # all_nodes.extend(page_nodes)
+        # all_nodes.extend(image_nodes)
+        # all_nodes.extend(table_nodes)
+
+        # all_edges.extend(edges)
+
+        print(f"Completed paper: {paper['title']} ({paper_id})")
 
         # insert_nodes(database, nodes)
         # insert_nodes(database, page_nodes)
@@ -109,14 +104,15 @@ def run_pipeline():
 
         #insert_edges(database, edges)
 
-        print("Processed:", paper["title"])
     
-    print("Writing batched data to Spanner...")
+    #print("Writing batched data to Spanner...")
 
-    insert_nodes(database, all_nodes)
-    insert_edges(database, all_edges)
+    # insert_nodes(database, all_nodes)
+    # insert_edges(database, all_edges)
 
-    print("Pipeline completed successfully!")
+    print("\nPipeline completed successfully!")
+    print(f"Total nodes inserted: {len(total_nodes)}")
+    print(f"Total edges inserted: {len(total_edges)}")
 
 
 

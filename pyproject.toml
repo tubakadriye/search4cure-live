@@ -1,7 +1,7 @@
 [project]
 name = "search4cure"
 version = "0.1.0"
-description = "Multimdal Agentic Graph RAG system for diabetes research"
+description = "Multimodal Agentic Graph RAG system for diabetes research"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
 dependencies = [
@@ -24,5 +24,8 @@ dependencies = [
     "tqdm",
     "tiktoken",
     "transformers",
-    "torch"
+    "torch==2.2.2+cpu"
 ]
+
+[tool.uv.sources]
+torch = { index = "https://download.pytorch.org/whl/cpu" }
