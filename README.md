@@ -54,7 +54,10 @@ J3 --> K
 ```
 
 ## Data Processing Pipeline
-```mermaid
+
+![Data Processing Pipeline](./docs/Data%20Processing%20Pipeline.png)
+
+<!-- ```mermaid
 flowchart TD
 
 A[arXiv] --> B[download_pdfs()]
@@ -74,7 +77,7 @@ H --> J
 I --> J
 
 J --> K[insert_into_spanner()]
-```
+``` -->
 
 ## Knowledge Graph Schema
 
