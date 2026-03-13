@@ -1,7 +1,7 @@
-import fitz  # PyMuPDF
+#import fitz  # PyMuPDF
 import camelot
-from io import BytesIO
-from PIL import Image
+#from io import BytesIO
+#from PIL import Image
 
 def extract_tables_from_pdf(pdf):
     """

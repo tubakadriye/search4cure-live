@@ -3,8 +3,8 @@ import io
 import os
 import uuid
 from PIL import Image
-from utils.gcs_utils import upload_bytes_to_gcs
-from embeddings.image_with_caption_processor import process_image_with_caption
+from backend.utils.gcs_utils import upload_bytes_to_gcs
+from backend.embeddings.image_with_caption_processor import process_image_with_caption
 
 
 def extract_images(pdf, paper_id):
