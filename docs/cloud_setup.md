@@ -167,7 +167,7 @@ source .venv/bin/activate   # Linux / Cloud Shell
 python ../scripts/setup_data.py --force
 ```
 
-[output](../data/images/graph_created_output.png)
+
 
 
 **Option 2 — Use uv run (auto-uses .venv):**
@@ -179,18 +179,10 @@ uv run python ../scripts/setup_data.py
 
 The output will be:
 
-Graph DiabetesResearchGraph created ✅
-
-============================================================
-SUCCESS! Database setup complete.
-============================================================
-
-Instance:  diabetes-research-network
-Database:  research-graph-db
-Graph:     DiabetesResearchGraph
-
-Access your database at:
-https://console.cloud.google.com/spanner/instances/diabetes-research-network/databases/research-graph-db?project=search4cure-diabetes
+![Output](../data/images/graph_created_output.png)
 
 **Tip:** Always run from inside .venv or using uv run to ensure dependencies (like python-dotenv) are correctly loaded.
 
+
+
+[def]: ../data/images/graph_created_output.png
