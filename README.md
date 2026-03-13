@@ -21,7 +21,7 @@ It enables:
 ---
 
 ## Architecture Diagram
-"""Mermaid
+```mermaid
 flowchart TD
 
 A[arXiv Papers] --> B[Download PDFs]
@@ -51,10 +51,10 @@ I --> J3[Multimodal Search]
 J1 --> K[Research Assistant]
 J2 --> K
 J3 --> K
-"""
+```
 
 ## Data Processing Pipeline
-""" Mermaid
+```mermaid
 flowchart TD
 
 A[arXiv] --> B[download_pdfs()]
@@ -74,11 +74,11 @@ H --> J
 I --> J
 
 J --> K[insert_into_spanner()]
-"""
+```
 
 ## Knowledge Graph Schema
 
-"""Mermaid
+```mermaid
 graph TD
 
 Paper -->|USES_METHOD| Method
@@ -92,11 +92,11 @@ Paper -->|HAS_AUTHOR| Author
 Drug -->|TREATS| Disease
 Author -->|WROTE| Paper
 Paper -->|CITES| Paper
-"""
+```
 
 ## Multimodal Document Structure
 
-""" Mermaid
+```mermaid
 graph TD
 
 Paper --> Page
@@ -108,11 +108,11 @@ Page --> Table
 Image --> ImageEmbedding
 TextChunk --> TextEmbedding
 Table --> TableEmbedding
-"""
+```
 
 ## Retrieval Architecture
 
-""" Mermaid
+```mermaid
 flowchart TD
 
 UserQuery --> Q1[Semantic Search]
@@ -128,11 +128,11 @@ I --> R
 G --> R
 
 R --> AI[AI Research Assistant]
-"""
+```
 
 ## System Deployment Architecture
 
-"""Mermaid
+```mermaid
 flowchart TD
 
 User --> UI[Streamlit / Frontend]
@@ -153,7 +153,7 @@ Embeddings --> Response
 Graph --> Response
 
 Response --> User
-"""
+```
 
 ## Research Query Reasoning
 
