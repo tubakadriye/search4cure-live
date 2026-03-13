@@ -47,3 +47,27 @@ class ArxivPDFLoader:
                     print(f"Error downloading {pdf_url}: {e}")
 
         return pdf_docs_with_meta
+
+    def stream_pdfs(self):
+        docs = self.loader.get_summaries_as_docs()
+        for doc in docs:
+            entry_id = doc.metadata.get("Entry ID")
+            title = doc.metadata.get("Title", "untitled").replace(" ", "_").replace("/", "_")
+            if entry_id:
+                arxiv_id = entry_id.split("/")[-1]
+                pdf_url = f"https://arxiv.org/pdf/{arxiv_id}.pdf"
+                try:
+                    r = requests.get(pdf_url)
+                    if r.status_code == 200:
+                        pdf_stream = BytesIO(r.content)
+                        pdf = fitz.open(stream=pdf_stream, filetype="pdf")
+                        yield {
+                            "pdf": pdf,
+                            "title": title,
+                            "url": pdf_url,
+                            "arxiv_id": arxiv_id
+                        }
+                    else:
+                        print(f"Failed to download {pdf_url}")
+                except Exception as e:
+                    print(f"Error downloading {pdf_url}: {e}")
