@@ -88,3 +88,9 @@ then your ingestion pipeline will run.
 
 Then run your pipeline again
 uv run python -m backend.pipeline.run_full_ingestion
+
+Save your local changes.
+
+git add pyproject.toml
+git commit -m "fix dependency config"
+git pull

@@ -20,8 +20,7 @@ def run_pipeline():
 
     loader = ArxivPDFLoader(
         query="diabetes",
-        max_docs=300,
-        delay=2
+        max_docs=300
     )
 
     #papers = loader.download_pdfs()
