@@ -64,15 +64,6 @@ gcloud auth application-default login
 
 This will open a browser → approve.
 
-3️⃣ Set the ADC environment variable
-export GOOGLE_APPLICATION_CREDENTIALS=$HOME/.config/gcloud/application_default_credentials.json
-
-4️⃣ Set Vertex AI region
-
-Your code likely needs a region like us-central1.
-
-export GOOGLE_CLOUD_PROJECT=search4cure-diabetes
-export GOOGLE_CLOUD_LOCATION=us-central1
 
 5️⃣ Test Vertex AI quickly
 
