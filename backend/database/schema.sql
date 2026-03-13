@@ -206,20 +206,25 @@ CREATE TABLE PaperReportsOutcome (
 
 CREATE VECTOR INDEX idx_paper_embedding
 ON Papers(text_embedding)
+WHERE text_embedding IS NOT NULL
 OPTIONS(distance_type="COSINE");
 
 CREATE VECTOR INDEX idx_page_embedding
 ON Pages(text_embedding)
+WHERE text_embedding IS NOT NULL
 OPTIONS(distance_type="COSINE");
 
 CREATE VECTOR INDEX idx_image_embedding
 ON Images(image_embedding)
+WHERE image_embedding IS NOT NULL
 OPTIONS(distance_type="COSINE");
 
 CREATE VECTOR INDEX idx_caption_embedding
 ON Images(caption_embedding)
+WHERE caption_embedding IS NOT NULL
 OPTIONS(distance_type="COSINE");
 
 CREATE VECTOR INDEX idx_table_embedding
 ON Tables(table_embedding)
+WHERE table_embedding IS NOT NULL
 OPTIONS(distance_type="COSINE");
