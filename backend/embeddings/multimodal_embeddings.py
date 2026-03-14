@@ -4,6 +4,7 @@ import vertexai
 from vertexai.preview.vision_models import MultiModalEmbeddingModel
 import tempfile
 import os
+from vertexai.vision_models import Image
 
 
 # Initialize Vertex AI
@@ -12,8 +13,23 @@ REGION = os.getenv("REGION", "us-central1")
 
 vertexai.init(project=PROJECT_ID, location=REGION)
 
+# Initialize your GCS client and bucket
+GCS_BUCKET = os.getenv("GCS_BUCKET", "diabetes-rag-assets")
+
 # Load model
 model = MultiModalEmbeddingModel.from_pretrained("multimodalembedding@001")
+
+def get_image_embedding(gcs_key):
+
+    gcs_uri = f"gs://{GCS_BUCKET}/{gcs_key}"
+
+    image = Image.load_from_file(gcs_uri)
+
+    embeddings = model.get_embeddings(
+        image=image
+    )
+
+    return embeddings.image_embedding
 
 
 def get_multimodal_embedding(data: Union[Image.Image, str]) -> List[float]:

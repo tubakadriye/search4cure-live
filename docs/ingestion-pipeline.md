@@ -28,8 +28,10 @@ Force install missing LangChain package:
 
 uv add langchain-community
 
+Create the bucket (if missing)
 
-
+gcloud storage buckets create gs://diabetes-rag-assets \
+--location=us-central1
 
 Run ingestion:
 
