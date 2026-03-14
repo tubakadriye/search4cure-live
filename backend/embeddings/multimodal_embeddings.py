@@ -32,62 +32,62 @@ def get_image_embedding(gcs_key):
     return embeddings.image_embedding
 
 
-def get_multimodal_embedding(data: Union[Image.Image, str]) -> List[float]:
-    """
-    Generate embeddings for text or images using Vertex AI multimodal embeddings.
+# def get_multimodal_embedding(data: Union[Image.Image, str]) -> List[float]:
+#     """
+#     Generate embeddings for text or images using Vertex AI multimodal embeddings.
 
-    Args:
-        data (Image.Image | str): Image or text input.
+#     Args:
+#         data (Image.Image | str): Image or text input.
 
-    Returns:
-        List[float]: embedding vector
-    """
+#     Returns:
+#         List[float]: embedding vector
+#     """
 
-    try:
+#     try:
 
-        # TEXT EMBEDDING
-        if isinstance(data, str):
+#         # TEXT EMBEDDING
+#         if isinstance(data, str):
 
-            embeddings = model.get_embeddings(
-                contextual_text=data
-            )
+#             embeddings = model.get_embeddings(
+#                 contextual_text=data
+#             )
 
-            return embeddings.text_embedding
-
-
-        # IMAGE EMBEDDING
-        elif isinstance(data, Image.Image):
-
-            # Save image temporarily
-            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
-
-                data.save(tmp.name)
-                image_path = tmp.name
-
-            embeddings = model.get_embeddings(
-                image=image_path
-            )
-
-            os.remove(image_path)
-
-            return embeddings.image_embedding
+#             return embeddings.text_embedding
 
 
-        else:
-            raise ValueError("Input must be text or PIL Image.")
+#         # IMAGE EMBEDDING
+#         elif isinstance(data, Image.Image):
 
-    except Exception as e:
+#             # Save image temporarily
+#             with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
 
-        print(f"[!] Vertex embedding failed: {e}")
-        return []
+#                 data.save(tmp.name)
+#                 image_path = tmp.name
+
+#             embeddings = model.get_embeddings(
+#                 image=image_path
+#             )
+
+#             os.remove(image_path)
+
+#             return embeddings.image_embedding
+
+
+#         else:
+#             raise ValueError("Input must be text or PIL Image.")
+
+#     except Exception as e:
+
+#         print(f"[!] Vertex embedding failed: {e}")
+#         return []
     
 
-def get_image_embedding(image_path):
+# def get_image_embedding(image_path):
 
-    embeddings = model.get_embeddings(
-        image=image_path
-    )
+#     embeddings = model.get_embeddings(
+#         image=image_path
+#     )
 
-    return embeddings.image_embedding
+#     return embeddings.image_embedding
 
 
