@@ -3,6 +3,10 @@
 #from io import BytesIO
 #from PIL import Image
 
+from backend.utils.gcs_utils import upload_bytes_to_gcs
+import json
+
+
 def extract_tables_from_pdf(pdf):
 
     tables = []
@@ -12,10 +16,21 @@ def extract_tables_from_pdf(pdf):
             page_tables = page.find_tables()
 
             for i, table in enumerate(page_tables.tables):
+                df = table.to_pandas()
+
+                json_bytes = json.dumps(df.to_dict()).encode()
+
+                gcs_key = upload_bytes_to_gcs(
+                    json_bytes,
+                    "tables",
+                    "application/json"
+                )
+
                 tables.append({
                     "page_number": page_index + 1,
                     "table_index": i,
-                    "dataframe": table.to_pandas()
+                    "dataframe": df,
+                    "gcs_key": gcs_key,
                 })
 
         except Exception:

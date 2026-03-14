@@ -4,6 +4,7 @@
 ```bash
 gcloud config set project search4cure-diabetes --quiet 
 ```
+export GCS_BUCKET=diabetes-rag-assets
 
 Run it from the project root (search4cure-live), 
 Go one level up
@@ -95,3 +96,39 @@ Save your local changes.
 git add pyproject.toml
 git commit -m "fix dependency config"
 git pull
+
+
+Gemini Flash pricing (important for your project)
+Example: Gemini Flash models
+
+
+| Model            | Input cost               | Output cost              |
+| ---------------- | ------------------------ | ------------------------ |
+| Gemini 2.5 Flash | ~$0.30 per **1M tokens** | ~$2.50 per **1M tokens** |
+| Gemini 2.0 Flash | ~$0.15 per **1M tokens** | ~$0.60 per **1M tokens** |
+
+
+
+This is extremely cheap compared to most models.
+
+Example:
+
+1 paper ≈ 3k–10k tokens
+
+300 papers ≈ 1–3M tokens
+
+Cost estimate:
+
+| Papers     | Estimated cost |
+| ---------- | -------------- |
+| 10 papers  | ~$0.01         |
+| 100 papers | ~$0.05         |
+| 300 papers | ~$0.10 – $0.30 |
+
+
+
+
+
+
+
+

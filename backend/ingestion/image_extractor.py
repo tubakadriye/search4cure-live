@@ -30,10 +30,7 @@ def extract_images(pdf, paper_id):
 
             image_id = f"page{page_index+1}_img{img_index}"
 
-            gcs_key = upload_bytes_to_gcs(
-                image_bytes,
-                "images"
-            )
+            gcs_key = upload_bytes_to_gcs(image_bytes, "images", "image/png")
   
 
             path = f"data/images/{image_id}.png"
