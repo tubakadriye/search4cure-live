@@ -9,7 +9,8 @@ Run it from the project root (search4cure-live),
 Go one level up
 cd ~/search4cure-live
 
-git pull
+git pull or 
+git pull origin  main
 
 Remove old environment & cache:
 

@@ -2,7 +2,7 @@ import json
 from vertexai.generative_models import GenerativeModel
 import re
 
-model = GenerativeModel("gemini-1.5-flash")
+model = GenerativeModel("gemini-2.5-flash")
 
 def extract_entities_with_llm(text):
 

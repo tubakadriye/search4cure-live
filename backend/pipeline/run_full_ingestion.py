@@ -29,7 +29,7 @@ def run_pipeline(max_papers=10, max_pages_for_entities=3):
 
     total_nodes, total_edges = [], []
 
-    print("Streaming up to {max_papers} papers from arXiv...")
+    print(f"Streaming up to {max_papers} papers from arXiv...")
     for paper in tqdm(loader.stream_pdfs(), desc="Papers", unit="paper"):
         pdf = paper["pdf"]
         paper_id = paper["arxiv_id"]
