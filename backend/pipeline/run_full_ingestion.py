@@ -15,12 +15,12 @@ from backend.database.spanner_client import get_database
 from tqdm import tqdm
 
 
-def run_pipeline():
+def run_pipeline(max_papers=10, max_pages_for_entities=3):
     print("Initializing Arxiv PDF loader...")
 
     loader = ArxivPDFLoader(
         query="diabetes",
-        max_docs=300
+        max_docs=max_papers #300
     )
 
     #papers = loader.download_pdfs()
@@ -29,7 +29,7 @@ def run_pipeline():
 
     total_nodes, total_edges = [], []
 
-    print("Streaming papers from arXiv...")
+    print("Streaming up to {max_papers} papers from arXiv...")
     for paper in tqdm(loader.stream_pdfs(), desc="Papers", unit="paper"):
         pdf = paper["pdf"]
         paper_id = paper["arxiv_id"]
@@ -41,8 +41,13 @@ def run_pipeline():
         full_text = " ".join([p["text"] for p in pages])
 
         # -------- ENTITY EXTRACTION --------
-        print("Extracting entities")
-        entities = extract_entities_with_llm(full_text)
+        print(f"Extracting entities from first {max_pages_for_entities} pages...")
+        entities_all = []
+
+        for page in pages[:max_pages_for_entities]:   # first 3 pages usually contain most entities
+            page_entities = extract_entities_with_llm(page["text"])
+            entities_all.append(page_entities)
+
 
         # -------- IMAGE EXTRACTION --------
         print("Extracting images...")
@@ -76,8 +81,8 @@ def run_pipeline():
         image_nodes = build_image_nodes(paper_id, images)
         table_nodes = build_table_nodes(paper_id, tables)
 
-        nodes = build_nodes(paper, entities, full_text)
-        edges = build_edges(paper, pages, entities, images, tables)
+        nodes = build_nodes(paper, entities_all, full_text)
+        edges = build_edges(paper, pages, entities_all, images, tables)
 
         # -------- INSERT INTO SPANNER --------
         print("Inserting nodes and edges into Spanner...")
@@ -117,7 +122,14 @@ def run_pipeline():
 
 
 if __name__ == "__main__":
-    run_pipeline()
+    # STEP 1: Run on 10 papers first
+    run_pipeline(max_papers=10, max_pages_for_entities=3)
+
+    # STEP 2: Check your graph in Spanner
+    # STEP 3: Scale to 100 papers
+    # run_pipeline(max_papers=100, max_pages_for_entities=3)
+    # STEP 4: Scale to 300 papers
+    # run_pipeline(max_papers=300, max_pages_for_entities=3)
 
 
 #uv run python backend/pipeline/run_full_ingestion.py
