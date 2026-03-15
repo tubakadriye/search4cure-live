@@ -15,8 +15,7 @@ def build_edges(paper, pages, entities, images=None, tables=None):
                 "table": table,
                 "paper_id": paper_id,
                 key: entity_id,
-                "created_at": spanner.COMMIT_TIMESTAMP,
-                "name": v
+                "created_at": spanner.COMMIT_TIMESTAMP
             })
 
     add("PaperUsesMethod", "method_id", entities.get("methods", []), prefix="method")
