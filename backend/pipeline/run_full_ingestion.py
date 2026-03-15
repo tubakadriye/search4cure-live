@@ -59,17 +59,24 @@ def run_pipeline(max_papers=10, max_pages_for_entities=3):
         }
 
 
-        for page in pages[:max_pages_for_entities]:   # first 3 pages usually contain most entities
-            page_entities = extract_entities_with_llm(page["text"])
-            #entities_all.append(page_entities)
-            for key in entities_all:
-                entities_all[key].extend(page_entities.get(key, []))
-                entities_all[key] = list(set(entities_all[key]))
+        for page in pages[:max_pages_for_entities]:
+            try:
+                page_entities = extract_entities_with_llm(page["text"]) or {}
+                for key in entities_all.keys():
+                    entities_all[key].extend(page_entities.get(key, []))
+                    entities_all[key] = list(set(entities_all[key]))
+                if not page_entities:
+                    print(f"[Warning] No entities extracted from page {page['page_number']} of paper {paper_id}")
+            except Exception as e:
+                print(f"[Error] Entity extraction failed on page {page['page_number']}: {e}")
+                continue
 
 
         # -------- IMAGE EXTRACTION --------
         print("Extracting images...")
         images = extract_images(pdf, paper_id)
+        if not images:
+            print(f"[Warning] No images found in paper {paper_id}")
 
         # -------- CAPTION EXTRACTION --------
         print("Extracting captions per page...")
@@ -91,6 +98,8 @@ def run_pipeline(max_papers=10, max_pages_for_entities=3):
         # -------- TABLE EXTRACTION --------
         print("Extracting tables...")
         tables = extract_tables_from_pdf(pdf)
+        if not tables:
+            print(f"[Warning] No tables found in paper {paper_id}")
 
         # -------- GRAPH BUILDING --------
         print("Building graph structure...")
@@ -107,17 +116,15 @@ def run_pipeline(max_papers=10, max_pages_for_entities=3):
         insert_nodes(database, nodes + page_nodes + image_nodes + table_nodes)
         insert_edges(database, edges)
 
+        # -------- AGGREGATE TOTALS & LOG --------
         total_nodes.extend(nodes + page_nodes + image_nodes + table_nodes)
         total_edges.extend(edges)
 
-        # all_nodes.extend(nodes)
-        # all_nodes.extend(page_nodes)
-        # all_nodes.extend(image_nodes)
-        # all_nodes.extend(table_nodes)
-
-        # all_edges.extend(edges)
-
-        print(f"Completed paper: {paper['title']} ({paper_id})")
+        print(f"Paper {paper_id} summary:")
+        print(f"  Nodes: {len(nodes) + len(page_nodes) + len(image_nodes) + len(table_nodes)}")
+        print(f"  Edges: {len(edges)}")
+        print(f"  Images: {len(images)} | Tables: {len(tables)}")
+        print(f"Completed paper: {paper['title']} ({paper_id})\n")
 
         # insert_nodes(database, nodes)
         # insert_nodes(database, page_nodes)
