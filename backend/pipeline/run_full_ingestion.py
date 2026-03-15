@@ -13,6 +13,10 @@ from backend.graph.edge_builder import build_edges
 from backend.database.spanner_writer import insert_nodes, insert_edges
 from backend.database.spanner_client import get_database
 from tqdm import tqdm
+import os
+
+# Disable OpenTelemetry / Cloud Spanner metrics export
+os.environ["GOOGLE_CLOUD_DISABLE_METRICS"] = "true"
 
 
 def run_pipeline(max_papers=10, max_pages_for_entities=3):
