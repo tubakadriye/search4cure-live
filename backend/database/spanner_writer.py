@@ -23,12 +23,14 @@ def insert_edges(database, edges):
 
         for edge in edges:
 
-            table = edge.pop("table")
+            #table = edge.pop("table")
+            table = edge["table"]
+            data = {k: v for k, v in edge.items() if k != "table"}
 
             tx.insert_or_update(
                 table,
-                columns=list(edge.keys()),
-                values=[tuple(edge.values())]
+                columns=list(data.keys()),
+                values=[tuple(data.values())]
             )
 
     database.run_in_transaction(txn)

@@ -1,7 +1,6 @@
 from google.cloud import spanner
+from backend.utils.id_utils import generate_id
 
-def normalize(x):
-    return x.lower().replace(" ", "_")
 
 def build_edges(paper, pages, entities, images=None, tables=None):
 
@@ -9,24 +8,24 @@ def build_edges(paper, pages, entities, images=None, tables=None):
 
     paper_id = paper["arxiv_id"]
 
-    def add(table, key, values):
-
+    def add(table, key, values, prefix):
         for v in values:
-
+            entity_id = generate_id(v, prefix)
             edges.append({
                 "table": table,
                 "paper_id": paper_id,
-                key: normalize(v),
-                "created_at": spanner.COMMIT_TIMESTAMP
+                key: entity_id,
+                "created_at": spanner.COMMIT_TIMESTAMP,
+                "name": v
             })
 
-    add("PaperUsesMethod", "method_id", entities.get("methods", []))
-    add("PaperHasAuthor", "author_id", entities.get("authors", []))
-    add("PaperStudiesDisease", "disease_id", entities.get("diseases", []))
-    add("PaperUsesDataset", "dataset_id", entities.get("datasets", []))
-    add("PaperMentionsBiomarker", "biomarker_id", entities.get("biomarkers", []))
-    add("PaperMentionsGene", "gene_id", entities.get("genes", []))
-    add("PaperReportsOutcome", "outcome_id", entities.get("outcomes", []))
+    add("PaperUsesMethod", "method_id", entities.get("methods", []), prefix="method")
+    add("PaperHasAuthor", "author_id", entities.get("authors", []), prefix="author")
+    add("PaperStudiesDisease", "disease_id", entities.get("diseases", []), prefix="disease")
+    add("PaperUsesDataset", "dataset_id", entities.get("datasets", []), prefix="dataset")
+    add("PaperMentionsBiomarker", "biomarker_id", entities.get("biomarkers", []), prefix="biomarker")
+    add("PaperMentionsGene", "gene_id", entities.get("genes", []), prefix="gene")
+    add("PaperReportsOutcome", "outcome_id", entities.get("outcomes", []), prefix="outcome")
 
     # -----------------------------
     # Pages
@@ -67,7 +66,7 @@ def build_edges(paper, pages, entities, images=None, tables=None):
     # -----------------------------
     if tables:
         for t in tables:
-            table_id = f"{paper_id}_p{t['page_number']}_t{t['table_index']}"
+            table_id = generate_id(f"{paper_id}_p{t['page_number']}_t{t['table_index']}", "table")
 
             edges.append({
                 "table": "PaperHasTable",

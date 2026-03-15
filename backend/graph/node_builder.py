@@ -3,12 +3,8 @@ from backend.embeddings.table_embeddings import embed_table
 #import json
 from backend.embeddings.text_embeddings import get_text_embedding
 from google.cloud import spanner
+from backend.utils.id_utils import generate_id
 
-import hashlib
-
-def short_id(text, prefix):
-    h = hashlib.md5(text.encode()).hexdigest()[:12]
-    return f"{prefix}_{h}"
 
 def build_nodes(paper, entities, full_text):
 
@@ -36,7 +32,7 @@ def build_nodes(paper, entities, full_text):
     for a in entities.get("authors", []):
         nodes.append({
             "table": "Authors",
-            "author_id": short_id(a, "author"),
+            "author_id": generate_id(a, "author"),
             "name": a,
             "created_at": spanner.COMMIT_TIMESTAMP
         })
@@ -49,7 +45,7 @@ def build_nodes(paper, entities, full_text):
     for m in entities["methods"]:
         nodes.append({
             "table": "Methods",
-            "method_id": short_id(m, "method"),
+            "method_id": generate_id(m, "method"),
             "name": m,
             "created_at": spanner.COMMIT_TIMESTAMP
         })
@@ -61,7 +57,7 @@ def build_nodes(paper, entities, full_text):
     for d in entities["diseases"]:
         nodes.append({
             "table": "Diseases",
-            "disease_id": short_id(d, "disease"),
+            "disease_id": generate_id(d, "disease"),
             "name": d,
             "created_at": spanner.COMMIT_TIMESTAMP
         })
@@ -73,7 +69,7 @@ def build_nodes(paper, entities, full_text):
     for ds in entities["datasets"]:
         nodes.append({
             "table": "Datasets",
-            "dataset_id": short_id(ds, "dataset"),
+            "dataset_id": generate_id(ds, "dataset"),
             "name": ds,
             "created_at": spanner.COMMIT_TIMESTAMP
         })
@@ -86,7 +82,7 @@ def build_nodes(paper, entities, full_text):
     for b in entities.get("biomarkers", []):
         nodes.append({
             "table": "Biomarkers",
-            "biomarker_id": short_id(b, "biomarker"),
+            "biomarker_id": generate_id(b, "biomarker"),
             "name": b,
             "created_at": spanner.COMMIT_TIMESTAMP
         })
@@ -98,7 +94,7 @@ def build_nodes(paper, entities, full_text):
     for drug in entities.get("drugs", []):
         nodes.append({
             "table": "Drugs",
-            "drug_id": short_id(drug, "drug"),
+            "drug_id": generate_id(drug, "drug"),
             "name": drug,
             "created_at": spanner.COMMIT_TIMESTAMP
         })
@@ -110,7 +106,7 @@ def build_nodes(paper, entities, full_text):
     for g in entities.get("genes", []):
         nodes.append({
             "table": "Genes",
-            "gene_id": short_id(g, "gene"),
+            "gene_id": generate_id(g, "gene"),
             "name": g,
             "created_at": spanner.COMMIT_TIMESTAMP
         })
@@ -123,7 +119,7 @@ def build_nodes(paper, entities, full_text):
     for o in entities.get("outcomes", []):
         nodes.append({
             "table": "Outcomes",
-            "outcome_id": short_id(o, "outcome"),
+            "outcome_id": generate_id(o, "outcome"),
             "name": o,
             "created_at": spanner.COMMIT_TIMESTAMP
         })
