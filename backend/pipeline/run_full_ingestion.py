@@ -12,14 +12,20 @@ from backend.graph.edge_builder import build_edges
 
 from backend.database.spanner_writer import insert_nodes, insert_edges
 from backend.database.spanner_client import get_database
+
 from tqdm import tqdm
 import os
+import logging
 
 # Disable OpenTelemetry / Cloud Spanner metrics export
-os.environ["GOOGLE_CLOUD_DISABLE_METRICS"] = "true"
+# -------------------- SETTINGS --------------------
+os.environ["GOOGLE_CLOUD_DISABLE_METRICS"] = "true"  # fully disable Cloud metrics
+logging.getLogger("opentelemetry").setLevel(logging.ERROR)  # silence OpenTelemetry
+
+BATCH_SIZE = 5000  # nodes/edges per batch insert
 
 
-def run_pipeline(max_papers=10, max_pages_for_entities=3):
+def run_pipeline(max_papers=300, max_pages_for_entities=3):
     print("Initializing Arxiv PDF loader...")
 
     loader = ArxivPDFLoader(
@@ -32,6 +38,8 @@ def run_pipeline(max_papers=10, max_pages_for_entities=3):
     database = get_database()
 
     total_nodes, total_edges = [], []
+    batch_nodes, batch_edges = [], []
+
 
     print(f"Streaming up to {max_papers} papers from arXiv...")
     for paper in tqdm(loader.stream_pdfs(), desc="Papers", unit="paper"):
@@ -90,10 +98,13 @@ def run_pipeline(max_papers=10, max_pages_for_entities=3):
         for img in images:
             captions = page_caption_map.get(img["page_number"], [])
             caption = captions[0] if captions else ""
-            embeddings = process_image_with_caption(img["gcs_key"], caption)
-            img["caption"] = caption
-            img["image_embedding"] = embeddings["image_embedding"]
-            img["caption_embedding"] = embeddings["caption_embedding"]
+            try:
+                embeddings = process_image_with_caption(img["gcs_key"], caption)
+                img["caption"] = caption
+                img["image_embedding"] = embeddings["image_embedding"]
+                img["caption_embedding"] = embeddings["caption_embedding"]
+            except Exception as e:
+                print(f"[Warning] Embedding failed for image on page {img['page_number']}: {e}")
         
         # -------- TABLE EXTRACTION --------
         print("Extracting tables...")
@@ -111,10 +122,23 @@ def run_pipeline(max_papers=10, max_pages_for_entities=3):
         nodes = build_nodes(paper, entities_all, full_text)
         edges = build_edges(paper, pages, entities_all, images, tables)
 
-        # -------- INSERT INTO SPANNER --------
-        print("Inserting nodes and edges into Spanner...")
-        insert_nodes(database, nodes + page_nodes + image_nodes + table_nodes)
-        insert_edges(database, edges)
+        # -------- BATCH INSERT INTO SPANNER --------
+        batch_nodes.extend(nodes + page_nodes + image_nodes + table_nodes)
+        batch_edges.extend(edges)
+
+        # flush batch if too big
+        if len(batch_nodes) > BATCH_SIZE:
+            try:
+                insert_nodes(database, batch_nodes)
+                insert_edges(database, batch_edges)
+            except Exception as e:
+                print(f"[Error] Batch insert failed: {e}")
+            batch_nodes, batch_edges = [], []
+
+        # # -------- INSERT INTO SPANNER --------
+        # print("Inserting nodes and edges into Spanner...")
+        # insert_nodes(database, nodes + page_nodes + image_nodes + table_nodes)
+        # insert_edges(database, edges)
 
         # -------- AGGREGATE TOTALS & LOG --------
         total_nodes.extend(nodes + page_nodes + image_nodes + table_nodes)
@@ -140,6 +164,14 @@ def run_pipeline(max_papers=10, max_pages_for_entities=3):
     # insert_nodes(database, all_nodes)
     # insert_edges(database, all_edges)
 
+    # flush remaining nodes/edges
+    if batch_nodes:
+        try:
+            insert_nodes(database, batch_nodes)
+            insert_edges(database, batch_edges)
+        except Exception as e:
+            print(f"[Error] Final batch insert failed: {e}")
+
     print("\nPipeline completed successfully!")
     print(f"Total nodes inserted: {len(total_nodes)}")
     print(f"Total edges inserted: {len(total_edges)}")
@@ -148,13 +180,13 @@ def run_pipeline(max_papers=10, max_pages_for_entities=3):
 
 if __name__ == "__main__":
     # STEP 1: Run on 10 papers first
-    run_pipeline(max_papers=10, max_pages_for_entities=3)
+    #run_pipeline(max_papers=10, max_pages_for_entities=3)
 
     # STEP 2: Check your graph in Spanner
     # STEP 3: Scale to 100 papers
     # run_pipeline(max_papers=100, max_pages_for_entities=3)
     # STEP 4: Scale to 300 papers
-    # run_pipeline(max_papers=300, max_pages_for_entities=3)
+    run_pipeline(max_papers=300, max_pages_for_entities=3)
 
 
 #uv run python backend/pipeline/run_full_ingestion.py
