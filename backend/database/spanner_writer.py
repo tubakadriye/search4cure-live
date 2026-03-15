@@ -4,12 +4,14 @@ def insert_nodes(database, nodes):
 
         for node in nodes:
 
-            table = node.pop("table")
+            #table = node.pop("table")
+            table = node["table"]
+            data = {k: v for k, v in node.items() if k != "table"}
 
             tx.insert_or_update(
                 table,
-                columns=list(node.keys()),
-                values=[tuple(node.values())]
+                columns=list(data.keys()),
+                values=[tuple(data.values())]
             )
 
     database.run_in_transaction(txn)
