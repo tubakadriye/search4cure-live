@@ -42,11 +42,25 @@ def run_pipeline(max_papers=10, max_pages_for_entities=3):
 
         # -------- ENTITY EXTRACTION --------
         print(f"Extracting entities from first {max_pages_for_entities} pages...")
-        entities_all = []
+        #entities_all = []
+        entities_all = {
+            "authors": [],
+            "methods": [],
+            "diseases": [],
+            "datasets": [],
+            "biomarkers": [],
+            "drugs": [],
+            "genes": [],
+            "outcomes": []
+        }
+
 
         for page in pages[:max_pages_for_entities]:   # first 3 pages usually contain most entities
             page_entities = extract_entities_with_llm(page["text"])
-            entities_all.append(page_entities)
+            #entities_all.append(page_entities)
+            for key in entities_all:
+                entities_all[key].extend(page_entities.get(key, []))
+                entities_all[key] = list(set(entities_all[key]))
 
 
         # -------- IMAGE EXTRACTION --------
