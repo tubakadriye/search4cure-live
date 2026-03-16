@@ -29,6 +29,8 @@ from backend.database.spanner_writer import insert_nodes, insert_edges
 from backend.database.spanner_client import get_database
 from backend.utils.spanner_utils import get_existing_papers, paper_exists
 from tqdm import tqdm
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="vertexai")
 
 BATCH_SIZE = 200  # nodes/edges per batch insert
 
