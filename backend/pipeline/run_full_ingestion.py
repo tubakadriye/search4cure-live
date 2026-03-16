@@ -37,7 +37,7 @@ BATCH_SIZE = 200  # nodes/edges per batch insert
 # -------------------- PAPER PROCESSING --------------------
 def process_paper(paper, database, max_pages_for_entities):
     paper_id = paper["arxiv_id"]
-    logging.info(f"[{paper_id}] Processing paper: {paper['title']}", flush=True)
+    logging.info(f"[{paper_id}] Processing paper: {paper['title']}")
 
     pdf = paper["pdf"]
     pages = extract_pages(pdf, paper_id)
@@ -52,18 +52,18 @@ def process_paper(paper, database, max_pages_for_entities):
         while retries < 5:
             try:
                 page_entities = extract_entities_with_llm(page["text"]) or {}
-                logging.info(f"[{paper_id}] Extracted entities page {page['page_number']}", flush=True)
+                logging.info(f"[{paper_id}] Extracted entities page {page['page_number']}")
                 time.sleep(1)  # prevent rate limits
                 break
 
             except Exception as e:
                 if "429" in str(e):
                     wait = 2 ** retries
-                    logging.warning(f"[{paper_id}] Rate limit hit. Waiting {wait}s...", flush=True)
+                    logging.warning(f"[{paper_id}] Rate limit hit. Waiting {wait}s...")
                     time.sleep(wait)
                     retries += 1
                 else:
-                    logging.error(f"[{paper_id}] Entity extraction failed: {e}", flush=True)
+                    logging.error(f"[{paper_id}] Entity extraction failed: {e}")
                     page_entities = {}
                     break
 
@@ -87,13 +87,13 @@ def process_paper(paper, database, max_pages_for_entities):
             img["caption"] = caption
             img["image_embedding"] = embeddings["image_embedding"]
             img["caption_embedding"] = embeddings["caption_embedding"]
-            logging.info(f"[{paper_id}] Processed image on page {img['page_number']}", flush=True)
+            logging.info(f"[{paper_id}] Processed image on page {img['page_number']}")
         except Exception as e:
-            logging.warning(f"[{paper_id}] Image embedding failed: {e}", flush=True)
+            logging.warning(f"[{paper_id}] Image embedding failed: {e}")
 
     # -------- TABLE EXTRACTION --------
     tables = extract_tables_from_pdf(pdf)
-    logging.info(f"[{paper_id}] Extracted {len(tables)} tables", flush=True)
+    logging.info(f"[{paper_id}] Extracted {len(tables)} tables")
 
     # -------- GRAPH BUILDING --------
     page_nodes = build_page_nodes(pages)
@@ -123,14 +123,14 @@ def run_pipeline(max_papers=300, max_pages_for_entities=3):
     batch_nodes, batch_edges = [], []
 
     existing_papers = get_existing_papers(database)
-    logging.info("Streaming papers from arXiv...", flush=True)
+    logging.info("Streaming papers from arXiv...")
 
     papers = [
         p for p in loader.stream_pdfs()
         if p["arxiv_id"] not in existing_papers
     ]
 
-    logging.info(f"{len(papers)} new papers to process", flush=True)
+    logging.info(f"{len(papers)} new papers to process")
 
     MAX_WORKERS = 4  # safe for Vertex AI
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
@@ -153,19 +153,19 @@ def run_pipeline(max_papers=300, max_pages_for_entities=3):
                     insert_nodes(database, batch_nodes)
                     insert_edges(database, batch_edges)
                     batch_nodes, batch_edges = [], []
-                    logging.info(f"[{paper_id}] Batch inserted {BATCH_SIZE} nodes/edges", flush=True)
+                    logging.info(f"[{paper_id}] Batch inserted {BATCH_SIZE} nodes/edges")
 
             except Exception as e:
-                logging.error(f"[{paper_id}] Paper processing failed: {e}", flush=True)
+                logging.error(f"[{paper_id}] Paper processing failed: {e}")
 
     # flush remaining batches
     if batch_nodes:
         try:
             insert_nodes(database, batch_nodes)
             insert_edges(database, batch_edges)
-            logging.info(f"Final batch inserted {len(batch_nodes)} nodes/edges", flush=True)
+            logging.info(f"Final batch inserted {len(batch_nodes)} nodes/edges")
         except Exception as e:
-            logging.error(f"Final batch insert failed: {e}", flush=True)
+            logging.error(f"Final batch insert failed: {e}")
 
     logging.info("\nPipeline completed successfully!")
     logging.info(f"Total nodes inserted: {len(total_nodes)}")
