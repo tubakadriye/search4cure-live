@@ -167,8 +167,52 @@ Cost estimate:
 
 
 
+load all existing IDs once:
+
+def get_existing_papers(database):
+    with database.snapshot() as snapshot:
+        results = snapshot.execute_sql("SELECT paper_id FROM Papers")
+        return set(row[0] for row in results)
+
+
+Fix the authentication (1 minute)
+
+Run this in Cloud Shell:
+
+gcloud auth application-default login
+
+Then confirm:
+
+gcloud config set project search4cure-diabetes
+
+Then verify:
+
+gcloud auth application-default print-access-token
+
+If it prints a token → authentication works.
+
+how many papers finished in the graph:
+
+SELECT COUNT(*) FROM Papers;
+
+in **Google Cloud Spanner.
 
 
 
 
 
+ower the batch size so data is written more often.
+
+Change:
+
+BATCH_SIZE = 5000
+
+to:
+
+BATCH_SIZE = 200
+
+This means:
+
+every ~3 papers → insert into Spanner
+
+so crashes will not lose progress.

@@ -23,8 +23,9 @@ from backend.utils.spanner_utils import get_existing_papers, paper_exists
 # -------------------- SETTINGS --------------------
 os.environ["GOOGLE_CLOUD_DISABLE_METRICS"] = "true"  # fully disable Cloud metrics
 logging.getLogger("opentelemetry").setLevel(logging.ERROR)  # silence OpenTelemetry
+os.environ["SPANNER_ENABLE_METRICS"] = "false"
 
-BATCH_SIZE = 5000  # nodes/edges per batch insert
+BATCH_SIZE = 200  # nodes/edges per batch insert 
 
 
 def run_pipeline(max_papers=300, max_pages_for_entities=3):
