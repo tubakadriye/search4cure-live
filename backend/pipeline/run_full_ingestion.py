@@ -1,12 +1,20 @@
 import os
 import logging
 import time
-# Disable OpenTelemetry / Cloud Spanner metrics export
+import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 # -------------------- SETTINGS --------------------
-os.environ["GOOGLE_CLOUD_DISABLE_METRICS"] = "true"  # fully disable Cloud metrics
+os.environ["GOOGLE_CLOUD_DISABLE_METRICS"] = "true"
 os.environ["OTEL_METRICS_EXPORTER"] = "none"
 os.environ["OTEL_TRACES_EXPORTER"] = "none"
-logging.getLogger("opentelemetry").setLevel(logging.CRITICAL)  # silence OpenTelemetry
+os.environ["SPANNER_ENABLE_METRICS"] = "false"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
 
 from backend.ingestion.arxiv_loader import ArxivPDFLoader
 from backend.ingestion.page_extractor import extract_pages
@@ -14,75 +22,54 @@ from backend.ingestion.image_extractor import extract_images
 from backend.ingestion.table_extractor import extract_tables_from_pdf
 from backend.ingestion.entity_extractor import extract_entities_with_llm
 from backend.ingestion.caption_extractor import extract_captions
-
 from backend.embeddings.image_with_caption_processor import process_image_with_caption
-
 from backend.graph.node_builder import build_nodes, build_image_nodes, build_page_nodes, build_table_nodes
 from backend.graph.edge_builder import build_edges
-
 from backend.database.spanner_writer import insert_nodes, insert_edges
 from backend.database.spanner_client import get_database
-
+from backend.utils.spanner_utils import get_existing_papers, paper_exists
 from tqdm import tqdm
 
-import sys
+BATCH_SIZE = 200  # nodes/edges per batch insert
 
-from backend.utils.spanner_utils import get_existing_papers, paper_exists
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
-
-os.environ["SPANNER_ENABLE_METRICS"] = "false"
-
-BATCH_SIZE = 200  # nodes/edges per batch insert 
-
+# -------------------- PAPER PROCESSING --------------------
 def process_paper(paper, database, max_pages_for_entities):
+    paper_id = paper["arxiv_id"]
+    logging.info(f"[{paper_id}] Processing paper: {paper['title']}", flush=True)
 
     pdf = paper["pdf"]
-    paper_id = paper["arxiv_id"]
-
-    print(f"\nProcessing paper: {paper['title']} ({paper_id})")
-
     pages = extract_pages(pdf, paper_id)
     full_text = " ".join([p["text"] for p in pages])
 
     # -------- ENTITY EXTRACTION --------
-    entities_all = {
-        "authors": [],
-        "methods": [],
-        "diseases": [],
-        "datasets": [],
-        "biomarkers": [],
-        "drugs": [],
-        "genes": [],
-        "outcomes": []
-    }
+    entities_all = {k: [] for k in ["authors","methods","diseases","datasets","biomarkers","drugs","genes","outcomes"]}
+
 
     for page in pages[:max_pages_for_entities]:
-
         retries = 0
-        page_entities = {}
-
         while retries < 5:
             try:
                 page_entities = extract_entities_with_llm(page["text"]) or {}
+                logging.info(f"[{paper_id}] Extracted entities page {page['page_number']}", flush=True)
                 time.sleep(1)  # prevent rate limits
                 break
 
             except Exception as e:
                 if "429" in str(e):
                     wait = 2 ** retries
-                    print(f"Rate limit hit. Waiting {wait}s...")
+                    logging.warning(f"[{paper_id}] Rate limit hit. Waiting {wait}s...", flush=True)
                     time.sleep(wait)
                     retries += 1
                 else:
-                    print(f"[Error] Entity extraction failed: {e}")
+                    logging.error(f"[{paper_id}] Entity extraction failed: {e}", flush=True)
+                    page_entities = {}
                     break
 
         for key in entities_all:
             entities_all[key].extend(page_entities.get(key, []))
             entities_all[key] = list(set(entities_all[key]))
 
-    # -------- IMAGE EXTRACTION --------
+    # -------- IMAGE & CAPTION EXTRACTION --------
     images = extract_images(pdf, paper_id)
 
     page_caption_map = {}
@@ -98,11 +85,15 @@ def process_paper(paper, database, max_pages_for_entities):
             img["caption"] = caption
             img["image_embedding"] = embeddings["image_embedding"]
             img["caption_embedding"] = embeddings["caption_embedding"]
+            logging.info(f"[{paper_id}] Processed image on page {img['page_number']}", flush=True)
         except Exception as e:
-            print(f"[Warning] Embedding failed: {e}")
+            logging.warning(f"[{paper_id}] Image embedding failed: {e}", flush=True)
 
+    # -------- TABLE EXTRACTION --------
     tables = extract_tables_from_pdf(pdf)
+    logging.info(f"[{paper_id}] Extracted {len(tables)} tables", flush=True)
 
+    # -------- GRAPH BUILDING --------
     page_nodes = build_page_nodes(pages)
     image_nodes = build_image_nodes(paper_id, images)
     table_nodes = build_table_nodes(paper_id, tables)
@@ -113,8 +104,9 @@ def process_paper(paper, database, max_pages_for_entities):
     return nodes + page_nodes + image_nodes + table_nodes, edges
 
 
+# -------------------- PIPELINE --------------------
 def run_pipeline(max_papers=300, max_pages_for_entities=3):
-    print("Initializing Arxiv PDF loader...")
+    logging.info("Initializing Arxiv PDF loader...")
 
     loader = ArxivPDFLoader(
         query="diabetes",
@@ -129,57 +121,53 @@ def run_pipeline(max_papers=300, max_pages_for_entities=3):
     batch_nodes, batch_edges = [], []
 
     existing_papers = get_existing_papers(database)
-    print(f"Loading papers from arXiv...")
+    logging.info("Streaming papers from arXiv...", flush=True)
 
     papers = [
         p for p in loader.stream_pdfs()
         if p["arxiv_id"] not in existing_papers
     ]
 
-    print(f"{len(papers)} new papers to process")
+    logging.info(f"{len(papers)} new papers to process", flush=True)
 
     MAX_WORKERS = 4  # safe for Vertex AI
-
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-
         futures = [
             executor.submit(process_paper, paper, database, max_pages_for_entities)
             for paper in papers
         ]
 
-        for future in tqdm(as_completed(futures), total=len(futures), desc="Processing papers"):
-
+        for future in tqdm(as_completed(futures), total=len(futures), desc="Processing papers", file=sys.stdout):
+            paper = futures[future]
+            paper_id = paper["arxiv_id"]
             try:
-
                 nodes, edges = future.result()
-
                 batch_nodes.extend(nodes)
                 batch_edges.extend(edges)
-
                 total_nodes.extend(nodes)
                 total_edges.extend(edges)
 
                 if len(batch_nodes) > BATCH_SIZE:
-
                     insert_nodes(database, batch_nodes)
                     insert_edges(database, batch_edges)
-
                     batch_nodes, batch_edges = [], []
+                    logging.info(f"[{paper_id}] Batch inserted {BATCH_SIZE} nodes/edges", flush=True)
 
             except Exception as e:
-                print(f"[Error] Paper processing failed: {e}")
+                logging.error(f"[{paper_id}] Paper processing failed: {e}", flush=True)
 
     # flush remaining batches
     if batch_nodes:
         try:
             insert_nodes(database, batch_nodes)
             insert_edges(database, batch_edges)
+            logging.info(f"Final batch inserted {len(batch_nodes)} nodes/edges", flush=True)
         except Exception as e:
-            print(f"[Error] Final batch insert failed: {e}")
+            logging.error(f"Final batch insert failed: {e}", flush=True)
 
-    print("\nPipeline completed successfully!")
-    print(f"Total nodes inserted: {len(total_nodes)}")
-    print(f"Total edges inserted: {len(total_edges)}")
+    logging.info("\nPipeline completed successfully!")
+    logging.info(f"Total nodes inserted: {len(total_nodes)}")
+    logging.info(f"Total edges inserted: {len(total_edges)}")
 
 
 #     print(f"Streaming up to {max_papers} papers from arXiv...")
