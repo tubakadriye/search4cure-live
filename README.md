@@ -637,6 +637,17 @@ Answer
 
 
 
+test with
+"Methods used for diabetic retinopathy"
+
+"Genes associated with Type 2 diabetes"
+
+"Complications linked to gestational diabetes"
+
+"Which papers study Type 1 diabetes and exercise?"
+
+
+
 ## License
 
 MIT License

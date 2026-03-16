@@ -9,7 +9,7 @@ from agent.tools.search_tools import (
     table_search_tool
 )
 
-agent = Agent(
+root_agent = Agent(
     name="search4cure_agent",
     model="gemini-1.5-pro",
     instruction="""
