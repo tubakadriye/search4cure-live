@@ -1,7 +1,7 @@
 from google.adk.agents import Agent
 
 from backend.agent.tools.search_tools import (
-    hybrid_rrf_search,
+    hybrid_rrf_search_tool,
     page_search_tool,
     semantic_search,
     graph_search,
@@ -48,7 +48,7 @@ table_search_tool
 Retrieve tables from research papers.
 """,
     tools=[
-    hybrid_rrf_search,
+    hybrid_rrf_search_tool,
     semantic_search,
     graph_search,
     page_search_tool,

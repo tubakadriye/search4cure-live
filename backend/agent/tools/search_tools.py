@@ -1,4 +1,5 @@
 from backend.services.hybrid_search_service import (
+    hybrid_rrf_search,
     page_semantic_search,
     semantic_paper_search,
     graph_method_search,
@@ -83,3 +84,29 @@ async def page_search_tool(query: str):
 
     return format_results(results)
 
+# ---------------------
+# Tools used by agent
+# ---------------------
+
+async def hybrid_rrf_search_tool(query: str, limit: int = 10) -> str:
+    """
+    Default hybrid RRF search combining semantic + keyword search.
+
+    Best for:
+    - General queries about papers
+    - Combining similarity and keyword-based ranking
+    """
+    try:
+        results = hybrid_rrf_search(query, limit=limit)
+
+        if not results:
+            return "No relevant papers found."
+
+        formatted = []
+        for r in results:
+            formatted.append(f"Paper: {r['title']} | Score: {r['score']:.4f}")
+
+        return "\n".join(formatted)
+
+    except Exception as e:
+        return f"Error in hybrid RRF search: {str(e)}"
