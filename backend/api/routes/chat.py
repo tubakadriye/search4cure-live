@@ -5,7 +5,7 @@ from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.adk.memory import InMemoryMemoryService
 
-from backend.agent.agent import agent as root_agent
+from agent.agent import agent as root_agent
 
 
 router = APIRouter()

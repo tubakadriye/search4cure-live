@@ -1,6 +1,6 @@
 from google.adk.agents import Agent
 
-from backend.agent.tools.search_tools import (
+from agent.tools.search_tools import (
     hybrid_rrf_search_tool,
     page_search_tool,
     semantic_search,
