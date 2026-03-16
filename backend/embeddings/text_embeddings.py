@@ -7,7 +7,7 @@ vertexai.init(
     location=os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1"),
 )
 
-model = TextEmbeddingModel.from_pretrained("text-embedding-004")
+model = TextEmbeddingModel.from_pretrained("textembedding-gecko-004")
 
 def get_text_embedding(text):
 

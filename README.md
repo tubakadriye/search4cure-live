@@ -635,7 +635,10 @@ Answer
 ## Agent build 
 👉 [Agent build ](docs/agent_build.md)
 
+Run ADK Web from the project root (not inside backend):
 
+cd ~/search4cure-live
+uv run adk web --host 0.0.0.0 --port 8000
 
 test with
 "Methods used for diabetic retinopathy"
@@ -645,6 +648,7 @@ test with
 "Complications linked to gestational diabetes"
 
 "Which papers study Type 1 diabetes and exercise?"
+Genes associated with Type 2 diabetes
 
 
 
