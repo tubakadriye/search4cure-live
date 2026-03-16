@@ -11,7 +11,7 @@ from agent.tools.search_tools import (
 
 root_agent = Agent(
     name="search4cure_agent",
-    model="gemini-1.5-pro",
+    model="gemini-2.5-flash",
     instruction="""
 You are a biomedical research assistant helping researchers explore diabetes literature.
 
