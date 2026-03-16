@@ -219,3 +219,17 @@ Drug ── TREATS → Disease
 Paper ── CITES_PAPER → Paper
 ```
 
+
+Check Graph Growth
+
+Useful queries:
+
+Papers
+SELECT COUNT(*) FROM Papers;
+Nodes
+SELECT
+  (SELECT COUNT(*) FROM Methods) +
+  (SELECT COUNT(*) FROM Diseases) +
+  (SELECT COUNT(*) FROM Authors)
+Edges
+SELECT COUNT(*) FROM PaperUsesMethod;

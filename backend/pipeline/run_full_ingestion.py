@@ -16,6 +16,7 @@ from backend.database.spanner_client import get_database
 from tqdm import tqdm
 import os
 import logging
+import sys
 
 from backend.utils.spanner_utils import get_existing_papers, paper_exists
 
@@ -43,13 +44,12 @@ def run_pipeline(max_papers=300, max_pages_for_entities=3):
     total_nodes, total_edges = [], []
     batch_nodes, batch_edges = [], []
 
+    existing_papers = get_existing_papers(database)
 
     print(f"Streaming up to {max_papers} papers from arXiv...")
     for paper in tqdm(loader.stream_pdfs(), desc="Papers", unit="paper"):
         pdf = paper["pdf"]
-        paper_id = paper["arxiv_id"]
-
-        existing_papers = get_existing_papers(database)
+        paper_id = paper["arxiv_id"]   
 
         if paper_id in existing_papers:
             continue
@@ -162,6 +162,7 @@ def run_pipeline(max_papers=300, max_pages_for_entities=3):
         print(f"  Edges: {len(edges)}")
         print(f"  Images: {len(images)} | Tables: {len(tables)}")
         print(f"Completed paper: {paper['title']} ({paper_id})\n")
+        sys.stdout.flush()
 
         # insert_nodes(database, nodes)
         # insert_nodes(database, page_nodes)
