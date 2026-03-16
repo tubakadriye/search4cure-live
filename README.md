@@ -311,9 +311,15 @@ search4cure/
 │   │   └── hybrid_retriever.py
 │   │
 │   ├── pipeline/
-│   │   ├── build_graph_from_arxiv.py
-│   │   ├── process_pdfs_pipeline.py
 │   │   └── run_full_ingestion.py
+│   ├── services/
+│   │   └── hybrid_search_service.py
+│
+│   ├── agent/
+│   │   ├── agent.py
+│   │   └── tools/
+│   │        └── search_tools.py
+│
 │   │
 │   └── api/
 │       └── rag_api.py
@@ -568,6 +574,66 @@ export REGION=us-central1
 
 👉 [Ingestion Pipeline](docs/ingestion-pipeline.md)
 
+
+## architecture
+
+                ┌────────────────────┐
+                │   User Question     │
+                └─────────┬──────────┘
+                          │
+                          ▼
+                 Search4Cure Agent
+                     (Gemini)
+                          │
+           ┌──────────────┼──────────────┐
+           │              │              │
+           ▼              ▼              ▼
+    Semantic Search   Graph Search   Image Search
+           │              │              │
+           └──────────────┼──────────────┘
+                          ▼
+                Hybrid Retrieval Engine
+                          │
+                          ▼
+                  Cloud Spanner Graph
+                          │
+                          ▼
+                     Answer
+
+
+User
+ │
+ ▼
+Search4Cure Agent
+ │
+ ├ semantic_search
+ ├ graph_search
+ ├ image_search
+ └ table_search
+ │
+ ▼
+Hybrid Retrieval Engine
+ │
+ ├ Vector search
+ ├ Graph traversal
+ └ Multimodal search
+ │
+ ▼
+Cloud Spanner Graph
+ │
+ ├ Papers
+ ├ Entities
+ ├ Images
+ └ Tables
+ │
+ ▼
+Gemini
+ │
+ ▼
+Answer
+
+## Agent build 
+👉 [Agent build ](docs/agent_build.md)
 
 
 

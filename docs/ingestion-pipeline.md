@@ -42,6 +42,36 @@ source .venv/bin/activate
 
 python -m backend.pipeline.run_full_ingestion
 
+run long pipelines on cloudshell:
+
+nohup uv run python -m backend.pipeline.run_full_ingestion > pipeline.log 2>&1 &
+
+- nohup → keeps the process alive
+
+- > pipeline.log → saves output to a log file
+
+- & → runs it in the background
+
+check logs:
+tail -f pipeline.log
+
+To check the process:
+
+ps aux | grep run_full_ingestion
+
+
+Expected runtime
+
+From your earlier run:
+
+~34 seconds per paper
+
+For 300 papers:
+
+300 × 34s ≈ 2.8 hours
+
+So the run will likely finish in 2.5–3 hours.
+
 
 
 
