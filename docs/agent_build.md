@@ -46,3 +46,15 @@ semantic search query for paper text embeddings.
 **Find methods used for diabetes prediction**
 
 
+### BM25 + RRF Hybrid Search
+
+BM25 + RRF Hybrid Search
+
+- BM25 Keyword Search
+
+
+### Add Reciprocal Rank Fusion
+RRF formula:
+score = Σ 1 / (k + rank)
+
+This is the standard IR fusion method.

@@ -1,6 +1,7 @@
 from google.adk.agents import Agent
 
 from backend.agent.tools.search_tools import (
+    hybrid_rrf_search,
     semantic_search,
     graph_search,
     image_search_tool,
@@ -17,12 +18,14 @@ You help researchers explore diabetes research papers.
 
 Use the tools when necessary:
 
+hybrid_rrf_search → best paper retrieval
 semantic_search → find relevant research papers
 graph_search → explore relationships between diseases and methods
 image_search_tool → retrieve figures from papers
 table_search_tool → retrieve tables from papers
 """,
     tools=[
+        hybrid_rrf_search,
         semantic_search,
         graph_search,
         image_search_tool,

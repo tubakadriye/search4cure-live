@@ -18,6 +18,9 @@ def format_results(results):
     return "\n".join(formatted)
 
 
+
+
+
 # ---------------------
 # Tools used by agent
 # ---------------------
@@ -49,3 +52,4 @@ async def table_search_tool(query: str):
     results = table_search(query)
 
     return format_results(results)
+

@@ -31,15 +31,32 @@ def semantic_paper_search(query, limit=10):
     SELECT
         p.paper_id,
         p.title,
+        m.name AS method,
+        d.name AS disease,
+
         COSINE_DISTANCE(
             p.text_embedding,
             (SELECT val FROM query_embedding)
         ) AS distance
 
-    FROM Papers p
+    LEFT JOIN PaperUsesMethod pum
+        ON p.paper_id = pum.paper_id
+
+    LEFT JOIN Methods m
+        ON pum.method_id = m.method_id
+
+    LEFT JOIN PaperStudiesDisease psd
+        ON p.paper_id = psd.paper_id
+
+    LEFT JOIN Diseases d
+        ON psd.disease_id = d.disease_id
+
     WHERE p.text_embedding IS NOT NULL
-    ORDER BY distance
+
+    ORDER BY distance ASC
     LIMIT @limit
+    """
+
     """
 
     return run_spanner_query(sql, {"query": query, "limit": limit})
@@ -51,24 +68,24 @@ def semantic_paper_search(query, limit=10):
 def graph_method_search(disease):
 
     sql = """
-    SELECT
-        p.title,
-        m.name AS method
+            SELECT
+                p.title,
+                m.name AS method
 
-    FROM Papers p
-    JOIN PaperStudiesDisease psd
-        ON p.paper_id = psd.paper_id
+            FROM Papers p
+            JOIN PaperStudiesDisease psd
+                ON p.paper_id = psd.paper_id
 
-    JOIN PaperUsesMethod pum
-        ON p.paper_id = pum.paper_id
+            JOIN PaperUsesMethod pum
+                ON p.paper_id = pum.paper_id
 
-    JOIN Methods m
-        ON pum.method_id = m.method_id
+            JOIN Methods m
+                ON pum.method_id = m.method_id
 
-    JOIN Diseases d
-        ON psd.disease_id = d.disease_id
+            JOIN Diseases d
+                ON psd.disease_id = d.disease_id
 
-    WHERE LOWER(d.name) LIKE LOWER(@disease)
+            WHERE LOWER(d.name) LIKE LOWER(@disease)
     """
 
     return run_spanner_query(sql, {"disease": f"%{disease}%"})
@@ -133,6 +150,52 @@ def table_search(query):
     """
 
     return run_spanner_query(sql, {"query": query})
+
+
+
+# ---------------------------
+# Keyword Search (BM25 style)
+# ---------------------------
+
+def keyword_paper_search(query, limit=20):
+
+    sql = """
+    SELECT
+        paper_id,
+        title,
+        SCORE(title, @query) AS score
+    FROM Papers
+    WHERE SEARCH(title, @query)
+    ORDER BY score DESC
+    LIMIT @limit
+    """
+
+    return run_spanner_query(sql, {"query": query, "limit": limit})
+
+
+# ---------------------------
+# RRF Hybrid Search
+# ---------------------------
+
+def hybrid_rrf_search(query, limit=10, k=60):
+
+    semantic_results = semantic_paper_search(query, limit=30)
+    keyword_results = keyword_paper_search(query, limit=30)
+
+    scores = {}
+
+    def add_scores(results):
+        for rank, r in enumerate(results):
+            pid = r["paper_id"]
+            scores.setdefault(pid, 0)
+            scores[pid] += 1 / (k + rank + 1)
+
+    add_scores(semantic_results)
+    add_scores(keyword_results)
+
+    ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+
+    return ranked[:limit]
 
 
 

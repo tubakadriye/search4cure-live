@@ -216,3 +216,54 @@ This means:
 every ~3 papers → insert into Spanner
 
 so crashes will not lose progress.
+
+
+✅ batch insertion
+✅ crash-safe logging
+✅ deduplication with existing_papers
+✅ entity extraction fallback
+✅ image + caption embeddings
+✅ table extraction
+✅ page graph nodes
+
+For 300 papers, this is production-level ingestion.
+
+
+Add Parallel Paper Processing
+
+Instead of:
+
+for paper in loader.stream_pdfs():
+
+Use ThreadPoolExecutor.
+
+Add this import:
+
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+sequential loop:
+
+for paper in tqdm(loader.stream_pdfs(), desc="Papers", unit="paper"):
+
+That means:
+
+paper1 → paper2 → paper3 → paper4
+
+You want:
+
+paper1
+paper2
+paper3
+paper4  (parallel)
+
+Old pipeline:
+
+300 papers
+× 2–3 minutes each
+= ~12 hours
+
+Parallel pipeline:
+
+4 workers
+300 / 4 = 75 batches
+≈ 2–4 hours
