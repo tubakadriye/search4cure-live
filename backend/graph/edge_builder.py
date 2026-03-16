@@ -67,6 +67,11 @@ def build_edges(paper, pages, entities, images=None, tables=None):
         for t in tables:
             table_id = generate_id(f"{paper_id}_p{t['page_number']}_t{t['table_index']}", "table")
 
+            page_id = generate_id(
+                f"{paper_id}_p{t['page_number']}",
+                "page"
+            )
+
             edges.append({
                 "table": "PaperHasTable",
                 "paper_id": paper_id,
@@ -74,7 +79,16 @@ def build_edges(paper, pages, entities, images=None, tables=None):
                 "created_at": spanner.COMMIT_TIMESTAMP
             })
 
+            edges.append({
+                "table": "PageHasTable",
+                "page_id": page_id,
+                "table_id": table_id,
+                "created_at": spanner.COMMIT_TIMESTAMP
+            })
+
+
     return edges
+
 
 
 

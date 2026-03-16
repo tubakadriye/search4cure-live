@@ -31,13 +31,24 @@ def semantic_paper_search(query, limit=10):
     SELECT
         p.paper_id,
         p.title,
+
         m.name AS method,
         d.name AS disease,
 
         COSINE_DISTANCE(
             p.text_embedding,
             (SELECT val FROM query_embedding)
-        ) AS distance
+        ) AS paper_distance,
+
+        COSINE_DISTANCE(
+            pg.text_embedding,
+            (SELECT val FROM query_embedding)
+        ) AS page_distance
+    
+    FROM Papers p
+
+    LEFT JOIN Pages pg
+        ON p.paper_id = pg.paper_id
 
     LEFT JOIN PaperUsesMethod pum
         ON p.paper_id = pum.paper_id
@@ -57,6 +68,38 @@ def semantic_paper_search(query, limit=10):
     LIMIT @limit
     """
 
+    return run_spanner_query(sql, {"query": query, "limit": limit})
+
+def page_semantic_search(query, limit=10):
+
+    sql = """
+    WITH query_embedding AS (
+        SELECT embeddings.values AS val
+        FROM ML.PREDICT(
+            MODEL TextEmbeddings,
+            (SELECT @query AS content)
+        )
+    )
+
+    SELECT
+        p.paper_id,
+        p.title,
+        pg.page_number,
+        pg.text,
+
+        COSINE_DISTANCE(
+            pg.text_embedding,
+            (SELECT val FROM query_embedding)
+        ) AS distance
+
+    FROM Pages pg
+    JOIN Papers p
+        ON pg.paper_id = p.paper_id
+
+    WHERE pg.text_embedding IS NOT NULL
+
+    ORDER BY distance ASC
+    LIMIT @limit
     """
 
     return run_spanner_query(sql, {"query": query, "limit": limit})
@@ -183,11 +226,15 @@ def hybrid_rrf_search(query, limit=10, k=60):
     keyword_results = keyword_paper_search(query, limit=30)
 
     scores = {}
+    paper_info = {}
 
     def add_scores(results):
         for rank, r in enumerate(results):
             pid = r["paper_id"]
+
+            paper_info[pid] = r
             scores.setdefault(pid, 0)
+
             scores[pid] += 1 / (k + rank + 1)
 
     add_scores(semantic_results)
@@ -195,7 +242,17 @@ def hybrid_rrf_search(query, limit=10, k=60):
 
     ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)
 
-    return ranked[:limit]
+    final = []
+
+    for pid, score in ranked[:limit]:
+        r = paper_info.get(pid)
+        final.append({
+            "paper_id": pid,
+            "title": r.get("title"),
+            "score": score
+        })
+
+    return final
 
 
 
