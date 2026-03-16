@@ -59,6 +59,12 @@ To check the process:
 
 ps aux | grep run_full_ingestion
 
+Monitor progress
+watch -n 5 'grep -c "Completed paper:" pipeline.log'
+
+
+grep -c "Completed paper:" pipeline.log
+
 
 Expected runtime
 
@@ -71,6 +77,8 @@ For 300 papers:
 300 × 34s ≈ 2.8 hours
 
 So the run will likely finish in 2.5–3 hours.
+
+
 
 
 

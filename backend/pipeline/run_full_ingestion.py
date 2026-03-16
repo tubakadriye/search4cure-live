@@ -17,6 +17,8 @@ from tqdm import tqdm
 import os
 import logging
 
+from backend.utils.spanner_utils import get_existing_papers, paper_exists
+
 # Disable OpenTelemetry / Cloud Spanner metrics export
 # -------------------- SETTINGS --------------------
 os.environ["GOOGLE_CLOUD_DISABLE_METRICS"] = "true"  # fully disable Cloud metrics
@@ -45,6 +47,16 @@ def run_pipeline(max_papers=300, max_pages_for_entities=3):
     for paper in tqdm(loader.stream_pdfs(), desc="Papers", unit="paper"):
         pdf = paper["pdf"]
         paper_id = paper["arxiv_id"]
+
+        existing_papers = get_existing_papers(database)
+
+        if paper_id in existing_papers:
+            continue
+
+        # if paper_exists(database, paper_id):
+        #     print(f"Skipping existing paper {paper_id}")
+        #     continue
+
         print(f"\nProcessing paper: {paper['title']} ({paper_id})")
 
         # -------- PAGE EXTRACTION --------
